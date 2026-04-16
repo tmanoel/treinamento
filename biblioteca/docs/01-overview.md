@@ -16,7 +16,7 @@ O sistema é composto por:
 
 ## O que o sistema faz
 
-- Permitir o cadastro de livros com título, autor e ano de publicação
+- Permitir o cadastro de livros com título, autor, editora e ano de publicação
 - Listar todos os livros cadastrados
 - Consultar um livro específico pelo ID
 - Marcar um livro como lido ou não lido
