@@ -12,7 +12,7 @@
 - Retorna `201` com os dados do livro criado
 - Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"`)
-- Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor (ex: `"Já existe um livro com este título e autor"`)
+- Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
 ---
 
@@ -51,7 +51,8 @@
 - Retorna `200` com os dados atualizados
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 - Retorna `400` com mensagem descritiva se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
-- Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente (ex: `"Já existe um livro com este título e autor"`)
+- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"`)
+- Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
 ---
 
@@ -78,3 +79,13 @@
 - Filtro por `lido` aceita `true` ou `false`
 - Filtros podem ser combinados
 - Retorna `200` com a lista filtrada (pode ser vazia)
+
+---
+
+## Requisitos Transversais (RNF01, RNF02, RNF03)
+
+Aplicam-se a todas as stories acima:
+
+- **RNF01 — API REST:** todos os endpoints seguem o estilo arquitetural REST (recursos nomeados no plural, verbos HTTP semânticos)
+- **RNF02 — JSON:** todas as requisições e respostas utilizam `Content-Type: application/json`
+- **RNF03 — Persistência:** os dados são preservados entre reinicializações da aplicação
