@@ -10,9 +10,9 @@
 - Todos os campos são obrigatórios
 - O livro é salvo com `lido: false` por padrão
 - Retorna `201` com os dados do livro criado
-- Retorna `400` se algum campo obrigatório estiver ausente ou vazio
-- Retorna `400` se `ano_publicacao` for inválido (fora do intervalo 1400–ano atual)
-- Retorna `409` se já existir um livro com o mesmo título e autor
+- Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
+- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"`)
+- Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor (ex: `"Já existe um livro com este título e autor"`)
 
 ---
 
@@ -36,7 +36,7 @@
 
 **Critérios de aceitação:**
 - Retorna `200` com os dados atualizados
-- Retorna `404` se o livro não existir
+- Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 
 ---
 
@@ -49,9 +49,9 @@
 **Critérios de aceitação:**
 - Permite atualizar qualquer campo (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`)
 - Retorna `200` com os dados atualizados
-- Retorna `404` se o livro não existir
-- Retorna `400` se algum campo enviado for inválido ou vazio
-- Retorna `409` se a edição gerar duplicata com outro livro existente
+- Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
+- Retorna `400` com mensagem descritiva se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
+- Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente (ex: `"Já existe um livro com este título e autor"`)
 
 ---
 
@@ -63,7 +63,7 @@
 
 **Critérios de aceitação:**
 - Retorna `200` ou `204` após remoção bem-sucedida
-- Retorna `404` se o livro não existir
+- Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 
 ---
 
