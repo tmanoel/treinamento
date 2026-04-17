@@ -11,7 +11,7 @@
 - O livro é salvo com `lido: false` por padrão
 - Retorna `201` com os dados do livro criado
 - Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
-- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"`)
+- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
 - Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
 ---
@@ -52,7 +52,7 @@
 - Retorna `200` com os dados atualizados
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 - Retorna `400` com mensagem descritiva se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
-- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"`)
+- Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
 - Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
 ---
