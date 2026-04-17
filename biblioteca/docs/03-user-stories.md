@@ -96,10 +96,12 @@
 
 ---
 
-## Requisitos Transversais (RNF01, RNF02, RNF03)
+## Requisitos Transversais (RNF01–RNF05)
 
 Aplicam-se a todas as stories acima:
 
 - **RNF01 — API REST:** todos os endpoints seguem o estilo arquitetural REST (recursos nomeados no plural, verbos HTTP semânticos)
 - **RNF02 — JSON:** todas as requisições e respostas utilizam `Content-Type: application/json`
 - **RNF03 — Persistência:** os dados são preservados entre reinicializações da aplicação
+- **RNF04 — Validação de entrada:** o sistema retorna mensagens de erro descritivas quando campos obrigatórios estiverem ausentes ou inválidos (ex: `"titulo é obrigatório"`)
+- **RNF05 — Códigos HTTP semânticos:** o sistema utiliza códigos HTTP adequados: `201` para criação, `204` para remoção, `400` para dados inválidos, `404` para recurso não encontrado, `409` para duplicata

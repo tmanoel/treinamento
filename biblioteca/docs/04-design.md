@@ -106,6 +106,7 @@ Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. 
 | D03 | ID inteiro vs UUID | ✅ ID inteiro autoincremento |
 | D04 | Incluir `created_at`/`updated_at` | ✅ Sim, ambos os campos |
 | D05 | Rota `GET /` — health check vs. frontend | ✅ `GET /` serve `index.html`; health check em `GET /health` |
+| D06 | RF04 (marcar lido) e RF05 (editar) como endpoints separados vs. único PATCH | ✅ Único `PATCH /livros/{id}` cobre ambos; `lido` é campo como qualquer outro |
 
 ---
 
