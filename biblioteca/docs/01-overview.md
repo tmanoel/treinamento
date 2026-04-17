@@ -5,8 +5,7 @@
 Uma API para gerenciar uma biblioteca pessoal de livros. O sistema permite que o usuário cadastre, consulte e acompanhe os livros que leu ou deseja ler.
 
 ## Objetivo
-
-Demonstrar a metodologia Spec-driven Development (SDD) na prática, onde a especificação é escrita antes do código e serve como fonte da verdade para testes e implementação.
+Centralizar em um único lugar o cadastro de livros que o usuário possui ou deseja ler, evitando listas dispersas em anotações, planilhas ou aplicativos diversos.
 
 ## Contexto
 
@@ -19,9 +18,11 @@ O sistema é composto por:
 - Permitir o cadastro de livros com título, autor, editora e ano de publicação
 - Permitir editar o cadastro de livros
 - Permitir remover o cadastro de livros
+- Filtrar livros por título, autor, editora, status leitura e ano de publicação
 - Listar todos os livros cadastrados
 - Marcar um livro como lido ou não lido
 - Impedir o cadastro de livros duplicados
+- Consultar livro por ID
 
 ## O que o sistema não faz (fora de escopo - Talvez fará numa fase II)
 

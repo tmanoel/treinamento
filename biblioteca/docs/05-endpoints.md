@@ -51,6 +51,7 @@ Lista todos os livros. Aceita filtros via query params.
 | `titulo` | string | Busca parcial, case-insensitive |
 | `autor` | string | Busca parcial, case-insensitive |
 | `editora` | string | Busca parcial, case-insensitive |
+| `ano_publicacao` | inteiro | Filtro exato |
 | `lido` | boolean | Filtro exato: `true` ou `false` |
 
 **Exemplos:**

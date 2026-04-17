@@ -29,6 +29,7 @@ O sistema deve permitir buscar livros por:
 - `titulo` (busca parcial, case-insensitive)
 - `autor` (busca parcial, case-insensitive)
 - `editora` (busca parcial, case-insensitive)
+- `ano_publicacao` (filtro exato)
 - `lido` (filtro exato: `true | false`)
 
 ### RF08 — Consultar livro por ID

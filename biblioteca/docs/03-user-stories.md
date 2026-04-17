@@ -72,11 +72,12 @@
 ## US06 — Buscar e filtrar livros
 
 **Como** usuário da biblioteca,  
-**quero** buscar livros por título, autor ou editora e filtrar por status de leitura,  
+**quero** buscar livros por título, autor, editora, ano de publicação ou status de leitura,  
 **para que** eu encontre rapidamente o livro que procuro.
 
 **Critérios de aceitação:**
 - Busca por `titulo`, `autor` ou `editora` é parcial e case-insensitive
+- Filtro por `ano_publicacao` é exato (inteiro)
 - Filtro por `lido` aceita `true` ou `false`
 - Filtros podem ser combinados
 - Retorna `200` com a lista filtrada (pode ser vazia)
