@@ -36,6 +36,7 @@
 
 **Critérios de aceitação:**
 - Retorna `200` com os dados atualizados
+- Retorna `400` com mensagem descritiva se `lido` não for um booleano (ex: `"lido deve ser true ou false"`)
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 
 ---
