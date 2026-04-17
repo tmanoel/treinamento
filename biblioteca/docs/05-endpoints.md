@@ -68,6 +68,32 @@ GET /livros?autor=tolkien&lido=true
 
 ---
 
+## GET /livros/{id}
+Retorna os dados de um livro específico pelo ID.
+
+**Respostas:**
+
+| Status | Descrição |
+|---|---|
+| `200 OK` | Dados do livro retornados |
+| `404 Not Found` | Livro não encontrado |
+
+**Exemplo de resposta `200`:**
+```json
+{
+  "id": 1,
+  "titulo": "O Senhor dos Anéis",
+  "autor": "J.R.R. Tolkien",
+  "editora": "HarperCollins",
+  "ano_publicacao": 1954,
+  "lido": false,
+  "created_at": "2026-04-16T10:00:00",
+  "updated_at": "2026-04-16T10:00:00"
+}
+```
+
+---
+
 ## PATCH /livros/{id}
 Atualiza os dados de um livro existente.
 
@@ -82,12 +108,14 @@ Atualiza os dados de um livro existente.
 }
 ```
 
+> `lido` deve ser um booleano (`true` ou `false`). Strings como `"true"` são inválidas.
+
 **Respostas:**
 
 | Status | Descrição |
 |---|---|
 | `200 OK` | Livro atualizado com sucesso |
-| `400 Bad Request` | Campo inválido ou vazio |
+| `400 Bad Request` | Campo inválido, vazio, `ano_publicacao` fora do intervalo válido, ou `lido` não booleano |
 | `404 Not Found` | Livro não encontrado |
 | `409 Conflict` | Atualização geraria duplicata com outro livro |
 
