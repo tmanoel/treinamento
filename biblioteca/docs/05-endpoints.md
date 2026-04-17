@@ -132,7 +132,7 @@ Atualiza os dados de um livro existente.
 | Status | Descrição |
 |---|---|
 | `200 OK` | Livro atualizado com sucesso |
-| `400 Bad Request` | Campo inválido, vazio, `ano_publicacao` fora do intervalo válido, ou `lido` não booleano |
+| `400 Bad Request` | Nenhum campo enviado no body, campo inválido, vazio, `ano_publicacao` fora do intervalo válido, ou `lido` não booleano |
 | `404 Not Found` | Livro não encontrado |
 | `409 Conflict` | Atualização geraria duplicata com outro livro |
 

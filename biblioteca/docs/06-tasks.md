@@ -94,6 +94,7 @@ Implementar edição parcial do livro. Esta task cobre tanto a edição genéric
 - **Pronto quando:**
   - Permite atualizar qualquer campo (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`)
   - Retorna `200` com os dados atualizados
+  - Retorna `400` se nenhum campo for enviado (ex: `"Informe ao menos um campo para atualizar"`)
   - Retorna `400` se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
   - Retorna `400` se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
   - Retorna `400` se `lido` não for um booleano (ex: `"lido deve ser true ou false"`)
