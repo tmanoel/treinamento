@@ -31,6 +31,9 @@ O sistema deve permitir buscar livros por:
 - `editora` (busca parcial, case-insensitive)
 - `lido` (filtro exato: `true | false`)
 
+### RF08 — Consultar livro por ID
+O sistema deve retornar os dados de um livro específico pelo seu ID.
+
 ---
 
 ## Requisitos Não Funcionais

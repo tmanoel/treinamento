@@ -82,6 +82,18 @@
 
 ---
 
+## US07 — Consultar livro por ID
+
+**Como** usuário da biblioteca,  
+**quero** consultar os detalhes de um livro específico pelo seu ID,  
+**para que** eu possa ver todas as informações de um livro sem precisar listar toda a biblioteca.
+
+**Critérios de aceitação:**
+- Retorna `200` com os dados do livro
+- Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
+
+---
+
 ## Requisitos Transversais (RNF01, RNF02, RNF03)
 
 Aplicam-se a todas as stories acima:
