@@ -64,7 +64,7 @@
 **para que** eu possa manter minha lista organizada.
 
 **Critérios de aceitação:**
-- Retorna `200` ou `204` após remoção bem-sucedida
+- Retorna `204` após remoção bem-sucedida (sem corpo na resposta)
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 
 ---

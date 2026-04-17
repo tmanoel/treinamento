@@ -51,7 +51,7 @@ Os dados devem ser persistidos entre reinicializações da aplicação.
 O sistema deve retornar mensagens de erro descritivas quando campos obrigatórios estiverem ausentes ou inválidos (ex: `"titulo é obrigatório"`).
 
 ### RNF05 — Códigos HTTP semânticos
-O sistema deve utilizar códigos HTTP adequados: `201` para criação, `404` para recurso não encontrado, `409` para duplicata, `400` para dados inválidos.
+O sistema deve utilizar códigos HTTP adequados: `201` para criação, `204` para remoção, `400` para dados inválidos, `404` para recurso não encontrado, `409` para duplicata.
 
 ---
 
