@@ -89,12 +89,13 @@ Implementar consulta de um livro específico.
 ### T07 — PATCH /livros/{id} (editar e marcar lido/não lido)
 Implementar edição parcial do livro. Esta task cobre tanto a edição genérica quanto a ação específica de marcar como lido/não lido.
 
-- **Ref:** RF05, RF06, RN03, US03, US04
+- **Ref:** RF04, RF05, RN03, US03, US04
 - **Depende de:** T02, T03
 - **Pronto quando:**
   - Permite atualizar qualquer campo (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`)
   - Retorna `200` com os dados atualizados
-  - Retorna `400` se campo inválido
+  - Retorna `400` se campo inválido ou vazio
+  - Retorna `400` se `lido` não for booleano (ex: string `"true"` é inválida)
   - Retorna `404` se livro não existe
   - Retorna `409` se a edição gerar duplicata
   - `updated_at` é atualizado automaticamente
