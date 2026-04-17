@@ -11,7 +11,7 @@ Centralizar em um único lugar o cadastro de livros que o usuário possui ou des
 
 O sistema é composto por:
 - Uma **API REST** que gerencia os dados dos livros
-- Um **frontend simples** que consome a API
+- Um **frontend simples** (HTML + JavaScript puro) para testar a API pelo navegador
 
 ## O que o sistema faz
 

@@ -76,12 +76,24 @@ biblioteca/
 │   ├── schemas.py         # schemas de validação (Pydantic)
 │   ├── repository.py      # acesso ao banco de dados
 │   ├── service.py         # regras de negócio
-│   └── router.py          # rotas HTTP
+│   ├── router.py          # rotas HTTP
+│   └── static/            # frontend simples
+│       ├── index.html
+│       ├── style.css
+│       └── script.js
 ├── tests/
 │   └── test_livros.py     # testes da API
 ├── requirements.txt
 └── README.md
 ```
+
+### Frontend
+
+Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. Objetivo é permitir testar a API pelo navegador sem ferramentas externas (curl/Postman).
+
+- **Stack:** HTML + CSS + JavaScript puro (sem framework, sem build step)
+- **Funcionalidades:** formulário de cadastro, lista de livros, editar/remover/marcar como lido, busca por título/autor/editora
+- **Comunicação:** `fetch()` direto para os endpoints da API (mesma origem)
 
 ---
 

@@ -139,15 +139,40 @@ Escrever testes cobrindo os critérios de aceitação de todas as user stories.
 
 ---
 
-### T11 — README e instruções de execução
+### T11 — Servir arquivos estáticos do frontend
+Configurar o FastAPI para servir a pasta `app/static/` e criar o arquivo inicial `index.html` mínimo.
+
+- **Ref:** design §4 (Frontend)
+- **Depende de:** T01
+- **Pronto quando:**
+  - `GET /` serve `index.html` da pasta `static/`
+  - Estrutura `app/static/` com `index.html`, `style.css`, `script.js` existe (podem estar vazios)
+
+---
+
+### T12 — Frontend funcional (HTML + JS)
+Implementar a interface simples para testar a API pelo navegador.
+
+- **Ref:** design §4 (Frontend)
+- **Depende de:** T04, T05, T07, T08, T09, T11
+- **Pronto quando:**
+  - Formulário de cadastro envia `POST /livros` e exibe mensagem de sucesso/erro
+  - Lista exibe todos os livros com botões de editar, remover e marcar como lido
+  - Campo de busca consome `GET /livros?titulo=...` e atualiza a lista
+  - Mensagens de erro da API são exibidas em português para o usuário
+
+---
+
+### T13 — README e instruções de execução
 Documentar como clonar, instalar, rodar e testar o projeto.
 
 - **Ref:** —
-- **Depende de:** T10
+- **Depende de:** T10, T12
 - **Pronto quando:**
   - README explica dependências, como instalar e como rodar
   - Inclui exemplos de chamadas para cada endpoint (curl ou similar)
   - Menciona como rodar os testes
+  - Explica como acessar o frontend no navegador
 
 ---
 
@@ -155,19 +180,22 @@ Documentar como clonar, instalar, rodar e testar o projeto.
 
 ```
 T01 ──► T02 ──► T04, T05, T06, T07, T08
-    └── T03 ─┘                     │
-                                   │
-                  T05 ──► T09 ─────┤
-                                   │
+    ├── T03 ─┘                     │
+    │                              │
+    │             T05 ──► T09 ─────┤
+    │                              │
+    │                              ▼
+    └── T11 ──► T12 ──────────────►│
                                    ▼
-                                  T10 ──► T11
+                                  T10 ──► T13
 ```
 
 ## Ordem sugerida de execução
 
 1. **T01** (setup)
-2. **T02** + **T03** (em paralelo)
+2. **T02** + **T03** + **T11** (em paralelo)
 3. **T04–T08** (em paralelo — um dev por endpoint)
 4. **T09** (depende de T05)
-5. **T10** (integra tudo)
-6. **T11** (documentação final)
+5. **T12** (frontend — depende dos endpoints)
+6. **T10** (integra tudo)
+7. **T13** (documentação final)
