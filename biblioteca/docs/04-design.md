@@ -37,8 +37,10 @@
 | `editora` | string | obrigatório, não vazio |
 | `ano_publicacao` | inteiro | obrigatório, entre 1400 e ano atual |
 | `lido` | booleano | opcional no cadastro, padrão `false` se não enviado |
-| `created_at` | datetime | preenchido automaticamente na criação |
-| `updated_at` | datetime | atualizado automaticamente a cada modificação |
+| `created_at` | datetime (ISO 8601 UTC) | preenchido automaticamente na criação |
+| `updated_at` | datetime (ISO 8601 UTC) | atualizado automaticamente a cada modificação |
+
+> **Formato de datas:** `created_at` e `updated_at` são serializados como string ISO 8601 em UTC (ex.: `"2026-04-17T10:00:00Z"`). Persistência em UTC garante comparações consistentes e evita ambiguidades de fuso.
 
 **Pontos para o grupo debater:**
 - Precisamos de `created_at` / `updated_at` para rastreabilidade?
@@ -105,8 +107,9 @@ Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. 
 | D02 | SQLite vs PostgreSQL | ✅ SQLite |
 | D03 | ID inteiro vs UUID | ✅ ID inteiro autoincremento |
 | D04 | Incluir `created_at`/`updated_at` | ✅ Sim, ambos os campos |
-| D05 | Rota `GET /` — health check vs. frontend | ✅ `GET /` serve `index.html`; health check em `GET /health` |
+| D05 | Rota `GET /` — health check vs. frontend | ✅ `GET /` serve `index.html` (ver D07); health check em `GET /api/health` |
 | D06 | RF04 (marcar lido) e RF05 (editar) como endpoints separados vs. único PATCH | ✅ Único `PATCH /livros/{id}` cobre ambos; `lido` é campo como qualquer outro |
+| D07 | Roteamento de API vs. frontend estático na raiz | ✅ API sob prefixo `/api` (ex.: `/api/livros`, `/api/health`); frontend estático montado em `/` via `StaticFiles(directory="app/static", html=True)`, que serve `index.html` automaticamente para `GET /`. Separa namespaces, mantém a documentação OpenAPI limpa e evita colisões com rotas futuras do frontend. |
 
 ---
 

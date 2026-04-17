@@ -20,7 +20,8 @@ Criar a estrutura de pastas proposta no design, instalar FastAPI e configurar o 
 - **Pronto quando:**
   - Estrutura `app/`, `tests/`, `requirements.txt`, `README.md` existe
   - `uvicorn app.main:app` sobe a aplicação sem erros
-  - Endpoint `GET /health` (health check) retorna `200` com `{"status": "ok"}`
+  - Endpoint `GET /api/health` (health check, RNF06) retorna `200` com `{"status": "ok"}`
+  - API roteada sob prefixo `/api` (D07)
 
 ---
 
@@ -32,7 +33,9 @@ Configurar o SQLAlchemy, criar a sessão do banco e o modelo `Livro` com todos o
 - **Pronto quando:**
   - Arquivo `biblioteca.db` é criado automaticamente ao subir a aplicação
   - Tabela `livros` tem todos os campos: `id`, `titulo`, `autor`, `editora`, `ano_publicacao`, `lido`, `created_at`, `updated_at`
-  - `created_at` e `updated_at` são preenchidos automaticamente
+  - `created_at` é preenchido automaticamente na criação
+  - `updated_at` é preenchido na criação e atualizado automaticamente a cada modificação do registro
+  - Ambos serializam como strings ISO 8601 em UTC (ex.: `"2026-04-17T10:00:00Z"`)
 
 ---
 
@@ -44,7 +47,8 @@ Criar os schemas de request/response em `schemas.py` e as validações baseadas 
 - **Pronto quando:**
   - Schema `LivroCreate`, `LivroUpdate`, `LivroResponse` definidos
   - Validação `ano_publicacao` entre 1400 e ano atual (RN04)
-  - Validação de strings não vazias nem só espaços (RN05)
+  - Mensagem do erro de `ano_publicacao` é construída dinamicamente interpolando `datetime.now(tz=UTC).year` (ex.: `f"ano_publicacao deve ser um número inteiro entre 1400 e {datetime.now(tz=UTC).year}"`). É essa a semântica do placeholder `{ano_corrente}` usado em US01/US04/T07.
+  - Validação de strings não vazias nem só espaços (RN05) aplicando `.strip()` antes de checar vazio; mensagem: `"<campo> é obrigatório"` (ex.: `"titulo é obrigatório"`)
   - Erros retornam mensagens descritivas em português (RNF04)
 
 ---
@@ -57,7 +61,7 @@ Implementar o endpoint de cadastro com verificação de duplicata.
 - **Ref:** RF01, RF02, RN01, RN02, US01
 - **Depende de:** T02, T03
 - **Pronto quando:**
-  - `POST /livros` retorna `201` em sucesso
+  - `POST /api/livros` retorna `201` em sucesso
   - Retorna `400` se campo obrigatório ausente/vazio ou `ano_publicacao` inválido
   - Retorna `409` se já existir livro com mesmo `titulo`+`autor` (case-insensitive)
   - Livro criado tem `lido: false` por padrão
@@ -70,7 +74,7 @@ Implementar listagem sem filtros.
 - **Ref:** RF03, US02
 - **Depende de:** T02, T03
 - **Pronto quando:**
-  - `GET /livros` retorna `200` com array de livros
+  - `GET /api/livros` retorna `200` com array de livros
   - Retorna array vazio quando não há livros cadastrados
 
 ---
@@ -81,36 +85,33 @@ Implementar consulta de um livro específico.
 - **Ref:** RF08, US07
 - **Depende de:** T02, T03
 - **Pronto quando:**
-  - `GET /livros/{id}` retorna `200` com os dados do livro
+  - `GET /api/livros/{id}` retorna `200` com os dados do livro
   - Retorna `404` com mensagem descritiva quando livro não existe
 
 ---
 
-### T07 — PATCH /livros/{id} (editar e marcar lido/não lido)
+### T07 — PATCH /api/livros/{id} (editar e marcar lido/não lido)
 Implementar edição parcial do livro. Esta task cobre tanto a edição genérica quanto a ação específica de marcar como lido/não lido.
 
-- **Ref:** RF04, RF05, RN03, US03, US04
+- **Ref:** RF04, RF05, RN01, RN03, US03, US04
 - **Depende de:** T02, T03
 - **Pronto quando:**
   - Permite atualizar qualquer campo (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`)
   - Retorna `200` com os dados atualizados
-  - Retorna `400` se nenhum campo for enviado (ex: `"Informe ao menos um campo para atualizar"`)
-  - Retorna `400` se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
-  - Retorna `400` se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
-  - Retorna `400` se `lido` não for um booleano (ex: `"lido deve ser true ou false"`)
-  - Retorna `404` se livro não existe
-  - Retorna `409` se a edição gerar duplicata
+  - Ordem de validação do `400`: (1) body vazio → `"Informe ao menos um campo para atualizar"`; (2) `lido` não booleano → `"lido deve ser true ou false"`; (3) `ano_publicacao` fora do intervalo → mensagem dinâmica (ver T03); (4) campo obrigatório enviado como string vazia ou apenas espaços → `"<campo> não pode ser vazio"` (ex.: `"autor não pode ser vazio"`)
+  - Retorna `404` se livro não existe (`"Livro não encontrado"`)
+  - Retorna `409` se a edição gerar duplicata com **outro** livro (ignora o próprio `id` na verificação — ver RN01). Mensagem: `"Já existe um livro com este título e autor"`
   - `updated_at` é atualizado automaticamente
 
 ---
 
-### T08 — DELETE /livros/{id} (remover)
+### T08 — DELETE /api/livros/{id} (remover)
 Implementar remoção de livro.
 
 - **Ref:** RF06 (remoção), US05
 - **Depende de:** T02
 - **Pronto quando:**
-  - `DELETE /livros/{id}` retorna `204 No Content` em sucesso
+  - `DELETE /api/livros/{id}` retorna `204 No Content` em sucesso
   - Retorna `404` se livro não existe
 
 ---
@@ -131,24 +132,26 @@ Adicionar suporte a query params de busca e filtro no endpoint de listagem.
 ## Fase 3 — Qualidade
 
 ### T10 — Testes automatizados
-Escrever testes cobrindo os critérios de aceitação de todas as user stories.
+Escrever testes cobrindo os critérios de aceitação de todas as user stories e do health check.
 
-- **Ref:** todas as US (US01–US07)
+- **Ref:** todas as US (US01–US07), RNF06
 - **Depende de:** T04, T05, T06, T07, T08, T09
 - **Pronto quando:**
   - Todos os critérios de aceitação das user stories têm ao menos um teste
+  - `GET /api/health` tem teste cobrindo o `200` com `{"status": "ok"}` (RNF06)
   - `pytest` roda todos os testes com sucesso
   - Testes usam banco em memória (não afeta `biblioteca.db`)
 
 ---
 
 ### T11 — Servir arquivos estáticos do frontend
-Configurar o FastAPI para servir a pasta `app/static/` e criar o arquivo inicial `index.html` mínimo.
+Configurar o FastAPI para servir a pasta `app/static/` na raiz, conforme D07.
 
-- **Ref:** design §4 (Frontend)
+- **Ref:** design §4 (Frontend), D07
 - **Depende de:** T01
 - **Pronto quando:**
-  - `GET /` serve `index.html` da pasta `static/`
+  - Montagem feita via `app.mount("/", StaticFiles(directory="app/static", html=True), name="frontend")` — o flag `html=True` faz `GET /` servir `index.html` automaticamente, sem rota dedicada
+  - Montagem acontece **depois** do roteador de API (`/api/...`) para não sobrepor os endpoints REST
   - Estrutura `app/static/` com `index.html`, `style.css`, `script.js` existe (podem estar vazios)
 
 ---
@@ -159,9 +162,9 @@ Implementar a interface simples para testar a API pelo navegador.
 - **Ref:** design §4 (Frontend)
 - **Depende de:** T04, T05, T07, T08, T09, T11
 - **Pronto quando:**
-  - Formulário de cadastro envia `POST /livros` e exibe mensagem de sucesso/erro
+  - Formulário de cadastro envia `POST /api/livros` e exibe mensagem de sucesso/erro
   - Lista exibe todos os livros com botões de editar, remover e marcar como lido
-  - Filtros por título, autor, editora, `lido` e `ano_publicacao` consomem `GET /livros` com os query params correspondentes e atualizam a lista (ex: `GET /livros?autor=tolkien&lido=true`)
+  - Filtros por título, autor, editora, `lido` e `ano_publicacao` consomem `GET /api/livros` com os query params correspondentes e atualizam a lista (ex.: `GET /api/livros?autor=tolkien&lido=true`)
   - Mensagens de erro da API são exibidas em português para o usuário
 
 ---

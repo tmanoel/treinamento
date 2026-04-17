@@ -1,5 +1,7 @@
 # Biblioteca Pessoal — User Stories
 
+> **Convenção:** `{ano_corrente}` nas mensagens de erro é um placeholder — a implementação interpola o ano atual em runtime (ver T03 em [06-tasks.md](06-tasks.md)). O texto literal `{ano_corrente}` nunca deve aparecer na resposta da API.
+
 ## US01 — Cadastrar livro
 
 **Como** usuário da biblioteca,  
@@ -10,7 +12,7 @@
 - Todos os campos são obrigatórios
 - `lido` é opcional; se não informado, o livro é salvo com `lido: false`
 - Retorna `201` com os dados do livro criado, incluindo `id`, `created_at` e `updated_at` gerados pelo servidor
-- Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
+- Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente, for enviado como string vazia ou contiver apenas espaços (ex: `"titulo é obrigatório"`; o mesmo vale para `"   "`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
 - Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
@@ -53,7 +55,7 @@
 - Retorna `200` com os dados atualizados
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 - Retorna `400` com mensagem descritiva se nenhum campo for enviado (ex: `"Informe ao menos um campo para atualizar"`)
-- Retorna `400` com mensagem descritiva se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
+- Retorna `400` com mensagem descritiva se algum campo enviado for inválido, string vazia ou contendo apenas espaços (ex: `"autor não pode ser vazio"`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
 - `updated_at` é atualizado automaticamente
 - Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)

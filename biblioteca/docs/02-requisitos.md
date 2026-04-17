@@ -54,12 +54,15 @@ O sistema deve retornar mensagens de erro descritivas quando campos obrigatório
 ### RNF05 — Códigos HTTP semânticos
 O sistema deve utilizar códigos HTTP adequados: `201` para criação, `204` para remoção, `400` para dados inválidos, `404` para recurso não encontrado, `409` para duplicata.
 
+### RNF06 — Health check
+O sistema deve expor um endpoint de verificação de disponibilidade (`GET /api/health`) que retorne `200 OK` com corpo `{"status": "ok"}` quando a aplicação estiver operacional. Destinado a verificações externas (monitoramento, smoke tests).
+
 ---
 
 ## Regras de Negócio
 
 ### RN01 — Duplicata
-Dois livros são considerados duplicatas quando possuem o mesmo `titulo` e `autor` (comparação case-insensitive).
+Dois livros são considerados duplicatas quando possuem o mesmo `titulo` e `autor` (comparação case-insensitive). Na edição (`PATCH`), a verificação deve ignorar o próprio livro pelo `id` — atualizar um livro mantendo seus próprios `titulo`/`autor` não é duplicata.
 
 ### RN02 — Status padrão
 `lido` é opcional no cadastro. Se não informado, o livro é criado com `lido: false`.
