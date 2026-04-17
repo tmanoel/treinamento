@@ -23,13 +23,14 @@ Verifica se a aplicação está no ar.
 ## POST /livros
 Cadastra um novo livro.
 
-**Request body:**
+**Request body** (`lido` é opcional, padrão `false`):
 ```json
 {
   "titulo": "O Senhor dos Anéis",
   "autor": "J.R.R. Tolkien",
   "editora": "HarperCollins",
-  "ano_publicacao": 1954
+  "ano_publicacao": 1954,
+  "lido": false
 }
 ```
 

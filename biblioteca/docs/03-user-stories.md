@@ -8,7 +8,7 @@
 
 **Critérios de aceitação:**
 - Todos os campos são obrigatórios
-- O livro é salvo com `lido: false` por padrão
+- `lido` é opcional; se não informado, o livro é salvo com `lido: false`
 - Retorna `201` com os dados do livro criado
 - Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)

@@ -62,7 +62,7 @@ O sistema deve utilizar códigos HTTP adequados: `201` para criação, `204` par
 Dois livros são considerados duplicatas quando possuem o mesmo `titulo` e `autor` (comparação case-insensitive).
 
 ### RN02 — Status padrão
-Todo livro recém-cadastrado deve ter `lido: false` por padrão.
+`lido` é opcional no cadastro. Se não informado, o livro é criado com `lido: false`.
 
 ### RN03 — Campos editáveis
 Todos os campos (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`) podem ser atualizados via RF05.

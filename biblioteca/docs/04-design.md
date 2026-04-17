@@ -36,7 +36,7 @@
 | `autor` | string | obrigatório, não vazio |
 | `editora` | string | obrigatório, não vazio |
 | `ano_publicacao` | inteiro | obrigatório, entre 1400 e ano atual |
-| `lido` | booleano | obrigatório, padrão `false` |
+| `lido` | booleano | opcional no cadastro, padrão `false` se não enviado |
 | `created_at` | datetime | preenchido automaticamente na criação |
 | `updated_at` | datetime | atualizado automaticamente a cada modificação |
 
