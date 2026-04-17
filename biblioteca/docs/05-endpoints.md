@@ -113,7 +113,7 @@ Retorna os dados de um livro específico pelo ID.
 ---
 
 ## PATCH /livros/{id}
-Atualiza os dados de um livro existente.
+Atualiza os dados de um livro existente. Cobre tanto a edição genérica (RF05/US04) quanto a ação de marcar como lido/não lido (RF04/US03).
 
 **Request body** (todos os campos opcionais, ao menos um obrigatório):
 ```json
