@@ -92,7 +92,7 @@ biblioteca/
 Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. Objetivo é permitir testar a API pelo navegador sem ferramentas externas (curl/Postman).
 
 - **Stack:** HTML + CSS + JavaScript puro (sem framework, sem build step)
-- **Funcionalidades:** formulário de cadastro, lista de livros, editar/remover/marcar como lido, busca por título/autor/editora
+- **Funcionalidades:** formulário de cadastro, lista de livros, editar/remover/marcar como lido, filtros por título, autor, editora, status de leitura (`lido`) e ano de publicação
 - **Comunicação:** `fetch()` direto para os endpoints da API (mesma origem)
 
 ---

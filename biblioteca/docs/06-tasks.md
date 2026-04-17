@@ -160,7 +160,7 @@ Implementar a interface simples para testar a API pelo navegador.
 - **Pronto quando:**
   - Formulário de cadastro envia `POST /livros` e exibe mensagem de sucesso/erro
   - Lista exibe todos os livros com botões de editar, remover e marcar como lido
-  - Campo de busca consome `GET /livros?titulo=...` e atualiza a lista
+  - Filtros por título, autor, editora, `lido` e `ano_publicacao` consomem `GET /livros` com os query params correspondentes e atualizam a lista (ex: `GET /livros?autor=tolkien&lido=true`)
   - Mensagens de erro da API são exibidas em português para o usuário
 
 ---
