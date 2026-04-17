@@ -27,3 +27,4 @@ O sistema é composto por:
 - Autenticação de usuários
 - Múltiplos usuários/bibliotecas
 - Integração com APIs externas de livros
+- Teste Zscaler
