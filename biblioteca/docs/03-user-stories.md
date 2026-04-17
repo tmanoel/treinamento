@@ -9,7 +9,7 @@
 **Critérios de aceitação:**
 - Todos os campos são obrigatórios
 - `lido` é opcional; se não informado, o livro é salvo com `lido: false`
-- Retorna `201` com os dados do livro criado
+- Retorna `201` com os dados do livro criado, incluindo `id`, `created_at` e `updated_at` gerados pelo servidor
 - Retorna `400` com mensagem descritiva se algum campo obrigatório estiver ausente ou vazio (ex: `"titulo é obrigatório"`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
 - Retorna `409` com mensagem descritiva se já existir um livro com o mesmo título e autor — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
@@ -36,6 +36,7 @@
 
 **Critérios de aceitação:**
 - Retorna `200` com os dados atualizados
+- `updated_at` é atualizado automaticamente
 - Retorna `400` com mensagem descritiva se `lido` não for um booleano (ex: `"lido deve ser true ou false"`)
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
 
@@ -54,6 +55,7 @@
 - Retorna `400` com mensagem descritiva se nenhum campo for enviado (ex: `"Informe ao menos um campo para atualizar"`)
 - Retorna `400` com mensagem descritiva se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
 - Retorna `400` com mensagem descritiva se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
+- `updated_at` é atualizado automaticamente
 - Retorna `409` com mensagem descritiva se a edição gerar duplicata com outro livro existente — comparação case-insensitive (ex: `"Já existe um livro com este título e autor"`)
 
 ---
