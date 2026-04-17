@@ -4,6 +4,22 @@ Base URL: `/livros`
 
 ---
 
+## GET /health
+Verifica se a aplicação está no ar.
+
+**Respostas:**
+
+| Status | Descrição |
+|---|---|
+| `200 OK` | Aplicação operacional |
+
+**Exemplo de resposta `200`:**
+```json
+{"status": "ok"}
+```
+
+---
+
 ## POST /livros
 Cadastra um novo livro.
 

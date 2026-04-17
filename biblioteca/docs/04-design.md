@@ -105,6 +105,7 @@ Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. 
 | D02 | SQLite vs PostgreSQL | ✅ SQLite |
 | D03 | ID inteiro vs UUID | ✅ ID inteiro autoincremento |
 | D04 | Incluir `created_at`/`updated_at` | ✅ Sim, ambos os campos |
+| D05 | Rota `GET /` — health check vs. frontend | ✅ `GET /` serve `index.html`; health check em `GET /health` |
 
 ---
 

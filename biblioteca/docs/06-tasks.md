@@ -20,7 +20,7 @@ Criar a estrutura de pastas proposta no design, instalar FastAPI e configurar o 
 - **Pronto quando:**
   - Estrutura `app/`, `tests/`, `requirements.txt`, `README.md` existe
   - `uvicorn app.main:app` sobe a aplicação sem erros
-  - Endpoint `GET /` (health check) retorna `200`
+  - Endpoint `GET /health` (health check) retorna `200` com `{"status": "ok"}`
 
 ---
 
@@ -89,12 +89,14 @@ Implementar consulta de um livro específico.
 ### T07 — PATCH /livros/{id} (editar e marcar lido/não lido)
 Implementar edição parcial do livro. Esta task cobre tanto a edição genérica quanto a ação específica de marcar como lido/não lido.
 
-- **Ref:** RF05, RF06, RN03, US03, US04
+- **Ref:** RF04, RF05, RN03, US03, US04
 - **Depende de:** T02, T03
 - **Pronto quando:**
   - Permite atualizar qualquer campo (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`)
   - Retorna `200` com os dados atualizados
-  - Retorna `400` se campo inválido
+  - Retorna `400` se algum campo enviado for inválido ou vazio (ex: `"autor não pode ser vazio"`)
+  - Retorna `400` se `ano_publicacao` for inválido (ex: `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_corrente}"`)
+  - Retorna `400` se `lido` não for um booleano (ex: `"lido deve ser true ou false"`)
   - Retorna `404` se livro não existe
   - Retorna `409` se a edição gerar duplicata
   - `updated_at` é atualizado automaticamente
