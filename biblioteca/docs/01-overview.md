@@ -17,14 +17,14 @@ O sistema é composto por:
 ## O que o sistema faz
 
 - Permitir o cadastro de livros com título, autor, editora e ano de publicação
+- Permitir editar o cadastro de livros
+- Permitir remover o cadastro de livros
 - Listar todos os livros cadastrados
-- Consultar um livro específico pelo ID
 - Marcar um livro como lido ou não lido
 - Impedir o cadastro de livros duplicados
 
-## O que o sistema não faz (fora de escopo)
+## O que o sistema não faz (fora de escopo - Talvez fará numa fase II)
 
 - Autenticação de usuários
 - Múltiplos usuários/bibliotecas
 - Integração com APIs externas de livros
-- Teste Zscaler
