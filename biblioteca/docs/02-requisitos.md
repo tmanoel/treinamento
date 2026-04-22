@@ -75,3 +75,6 @@ Todos os campos (`titulo`, `autor`, `editora`, `ano_publicacao`, `lido`) podem s
 
 ### RN05 — Campos obrigatórios não vazios
 Campos obrigatórios não podem ser enviados como string vazia ou contendo apenas espaços.
+
+### RN06 — Campos gerados pelo servidor
+Todo livro possui `id`, `created_at` e `updated_at` gerados automaticamente pelo sistema — não são informados pelo usuário. `created_at` é preenchido na criação e nunca alterado. `updated_at` é preenchido na criação e atualizado a cada modificação do registro.
