@@ -42,10 +42,6 @@
 
 > **Formato de datas:** `created_at` e `updated_at` são serializados como string ISO 8601 em UTC (ex.: `"2026-04-17T10:00:00Z"`). Persistência em UTC garante comparações consistentes e evita ambiguidades de fuso.
 
-**Pontos para o grupo debater:**
-- Precisamos de `created_at` / `updated_at` para rastreabilidade?
-- O `id` deve ser inteiro sequencial ou UUID?
-
 ---
 
 ## 3. Arquitetura da Aplicação

@@ -28,7 +28,7 @@ Criar a estrutura de pastas proposta no design, instalar FastAPI e configurar o 
 ### T02 — Camada de persistência (SQLite + SQLAlchemy)
 Configurar o SQLAlchemy, criar a sessão do banco e o modelo `Livro` com todos os campos definidos no design.
 
-- **Ref:** design §2, RNF03
+- **Ref:** design §2, RNF03, RN06
 - **Depende de:** T01
 - **Pronto quando:**
   - Arquivo `biblioteca.db` é criado automaticamente ao subir a aplicação
@@ -47,7 +47,7 @@ Criar os schemas de request/response em `schemas.py` e as validações baseadas 
 - **Pronto quando:**
   - Schema `LivroCreate`, `LivroUpdate`, `LivroResponse` definidos
   - Validação `ano_publicacao` entre 1400 e ano atual (RN04)
-  - Mensagem do erro de `ano_publicacao` é construída dinamicamente interpolando `datetime.now(tz=UTC).year` (ex.: `f"ano_publicacao deve ser um número inteiro entre 1400 e {datetime.now(tz=UTC).year}"`). É essa a semântica do placeholder `{ano_corrente}` usado em US01/US04/T07.
+  - Mensagem do erro de `ano_publicacao` é construída dinamicamente interpolando `datetime.now(tz=UTC).year` (ex.: `f"ano_publicacao deve ser um número inteiro entre 1400 e {datetime.now(tz=UTC).year}"`)
   - Validação de strings não vazias nem só espaços (RN05) aplicando `.strip()` antes de checar vazio; mensagem: `"<campo> é obrigatório"` (ex.: `"titulo é obrigatório"`)
   - Erros retornam mensagens descritivas em português (RNF04)
 
