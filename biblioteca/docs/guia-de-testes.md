@@ -401,6 +401,42 @@ http://127.0.0.1:8000/docs → `GET /api/livros` → "Try it out" → "Execute".
 
 ---
 
+## T06 — `GET /api/livros/{id}` (buscar por id)
+
+**O que a task entrega:** endpoint que retorna um único livro pelo `id` (RF03). Responde `404` com mensagem em português quando o livro não existe.
+
+### 1. Happy path (200)
+
+Cadastre um livro via `POST /api/livros` e anote o `id` retornado. Depois:
+
+```bash
+curl -i http://127.0.0.1:8000/api/livros/1
+```
+
+Esperado: `200 OK` e JSON com o livro completo (`id`, `titulo`, `autor`, `editora`, `ano_publicacao`, `lido`, `created_at`, `updated_at`). As datas vêm com sufixo `Z`.
+
+### 2. Livro inexistente (404)
+
+```bash
+curl -i http://127.0.0.1:8000/api/livros/9999
+```
+
+Esperado: `404 Not Found` + `{"detail":"Livro não encontrado"}`.
+
+### 3. `id` não numérico (400)
+
+```bash
+curl -i http://127.0.0.1:8000/api/livros/abc
+```
+
+Esperado: `400 Bad Request`. O FastAPI tenta converter o path param para `int` e falha — o handler de validação em [app/main.py](../app/main.py) transforma o erro em `400` com mensagem descritiva.
+
+### 4. Via Swagger UI
+
+http://127.0.0.1:8000/docs → `GET /api/livros/{livro_id}` → "Try it out" → digite um `id` → "Execute".
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -431,7 +467,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T06 — `GET /api/livros/{id}`
 - T07 — `PATCH /api/livros/{id}`
 - T08 — `DELETE /api/livros/{id}`
 - T09 — filtros no `GET /api/livros`

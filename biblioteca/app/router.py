@@ -33,3 +33,8 @@ def criar_livro(payload: LivroCreate, db: Session = Depends(get_db)):
 @router.get("/livros", response_model=list[LivroResponse])
 def listar_livros(db: Session = Depends(get_db)):
     return service.listar_livros(db)
+
+
+@router.get("/livros/{livro_id}", response_model=LivroResponse)
+def buscar_livro(livro_id: int, db: Session = Depends(get_db)):
+    return service.buscar_livro(db, livro_id)

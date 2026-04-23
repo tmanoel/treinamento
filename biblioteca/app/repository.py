@@ -25,3 +25,7 @@ def criar(db: Session, livro: Livro) -> Livro:
 
 def listar(db: Session) -> list[Livro]:
     return db.query(Livro).order_by(Livro.id).all()
+
+
+def buscar_por_id(db: Session, livro_id: int) -> Livro | None:
+    return db.query(Livro).filter(Livro.id == livro_id).first()
