@@ -1,0 +1,82 @@
+from datetime import UTC, datetime
+
+from pydantic import BaseModel, ConfigDict, StrictBool, field_serializer, field_validator
+
+MIN_ANO = 1400
+
+
+def _ano_atual() -> int:
+    return datetime.now(tz=UTC).year
+
+
+def _msg_ano_invalido() -> str:
+    return f"ano_publicacao deve ser um número inteiro entre {MIN_ANO} e {_ano_atual()}"
+
+
+def _validar_ano(v: object) -> int:
+    if not isinstance(v, int) or isinstance(v, bool):
+        raise ValueError(_msg_ano_invalido())
+    if v < MIN_ANO or v > _ano_atual():
+        raise ValueError(_msg_ano_invalido())
+    return v
+
+
+class LivroCreate(BaseModel):
+    titulo: str
+    autor: str
+    editora: str
+    ano_publicacao: int
+    lido: StrictBool = False
+
+    @field_validator("titulo", "autor", "editora", mode="before")
+    @classmethod
+    def _obrigatorio(cls, v: object, info) -> str:
+        if not isinstance(v, str) or not v.strip():
+            raise ValueError(f"{info.field_name} é obrigatório")
+        return v.strip()
+
+    @field_validator("ano_publicacao", mode="before")
+    @classmethod
+    def _ano(cls, v: object) -> int:
+        return _validar_ano(v)
+
+
+class LivroUpdate(BaseModel):
+    titulo: str | None = None
+    autor: str | None = None
+    editora: str | None = None
+    ano_publicacao: int | None = None
+    lido: StrictBool | None = None
+
+    @field_validator("titulo", "autor", "editora", mode="before")
+    @classmethod
+    def _nao_vazio(cls, v: object, info) -> str | None:
+        if v is None:
+            return None
+        if not isinstance(v, str) or not v.strip():
+            raise ValueError(f"{info.field_name} não pode ser vazio")
+        return v.strip()
+
+    @field_validator("ano_publicacao", mode="before")
+    @classmethod
+    def _ano(cls, v: object) -> int | None:
+        if v is None:
+            return None
+        return _validar_ano(v)
+
+
+class LivroResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    titulo: str
+    autor: str
+    editora: str
+    ano_publicacao: int
+    lido: bool
+    created_at: datetime
+    updated_at: datetime
+
+    @field_serializer("created_at", "updated_at")
+    def _iso_utc(self, v: datetime) -> str:
+        return v.strftime("%Y-%m-%dT%H:%M:%SZ")

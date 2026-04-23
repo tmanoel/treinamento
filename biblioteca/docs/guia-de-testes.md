@@ -177,6 +177,121 @@ python -X utf8 -c "from app.models import SessionLocal, Livro; s=SessionLocal();
 
 ---
 
+## T03 — Schemas de validação (Pydantic)
+
+**O que a task entrega:** schemas `LivroCreate`, `LivroUpdate` e `LivroResponse` em [app/schemas.py](../app/schemas.py), validando tipos, faixa de `ano_publicacao` (RN04), strings não vazias (RN05) e serializando `created_at`/`updated_at` em ISO 8601 UTC com sufixo `Z`.
+
+Como nenhum endpoint consome esses schemas ainda (vem a partir de T04), os testes abaixo exercitam as classes diretamente via Python.
+
+### 1. Happy path do LivroCreate
+
+```bash
+python -X utf8 -c "
+from app.schemas import LivroCreate
+l = LivroCreate(titulo=' O Hobbit ', autor='Tolkien', editora='HarperCollins', ano_publicacao=1937)
+print(l)
+"
+```
+
+Esperado: `titulo='O Hobbit'` (espaços das bordas removidos), `lido=False` (default RN02).
+
+### 2. Cada mensagem de erro (LivroCreate)
+
+```bash
+python -X utf8 -c "
+from pydantic import ValidationError
+from app.schemas import LivroCreate
+
+def tentar(**kw):
+    try:
+        LivroCreate(**kw)
+    except ValidationError as e:
+        for err in e.errors():
+            print('  -', err['msg'].replace('Value error, ', ''))
+
+print('titulo vazio:');         tentar(titulo='', autor='A', editora='E', ano_publicacao=2000)
+print('titulo só espaços:');    tentar(titulo='   ', autor='A', editora='E', ano_publicacao=2000)
+print('ano < 1400:');           tentar(titulo='T', autor='A', editora='E', ano_publicacao=1000)
+print('ano > ano atual:');      tentar(titulo='T', autor='A', editora='E', ano_publicacao=2099)
+print('ano como string:');      tentar(titulo='T', autor='A', editora='E', ano_publicacao='2000')
+print('lido como string:');     tentar(titulo='T', autor='A', editora='E', ano_publicacao=2000, lido='true')
+"
+```
+
+Esperado (mensagens em português):
+
+```
+titulo vazio:
+  - titulo é obrigatório
+titulo só espaços:
+  - titulo é obrigatório
+ano < 1400:
+  - ano_publicacao deve ser um número inteiro entre 1400 e 2026
+ano > ano atual:
+  - ano_publicacao deve ser um número inteiro entre 1400 e 2026
+ano como string:
+  - ano_publicacao deve ser um número inteiro entre 1400 e 2026
+lido como string:
+  - Input should be a valid boolean
+```
+
+> O `2026` na mensagem é interpolado em runtime via `datetime.now(tz=UTC).year`. Se o ano atual mudar, a mensagem acompanha.
+>
+> A mensagem de `lido` ainda sai com o texto padrão do Pydantic. T07 customiza para `"lido deve ser true ou false"` quando o PATCH for implementado.
+
+### 3. LivroUpdate (todos os campos opcionais)
+
+```bash
+python -X utf8 -c "
+from pydantic import ValidationError
+from app.schemas import LivroUpdate
+
+# body vazio é aceito no schema (T07 trata '{}' → 400 no router)
+print('update vazio:', LivroUpdate().model_dump(exclude_unset=True))
+
+# atualizando só um campo
+print('só lido:', LivroUpdate(lido=True).model_dump(exclude_unset=True))
+
+# string vazia em campo opcional vira erro diferente do Create
+try:
+    LivroUpdate(titulo='')
+except ValidationError as e:
+    print('titulo vazio:', e.errors()[0]['msg'].replace('Value error, ', ''))
+"
+```
+
+Esperado: `titulo não pode ser vazio` (mensagem de PATCH, conforme T07).
+
+### 4. Serialização ISO 8601 UTC no LivroResponse
+
+```bash
+python -X utf8 -c "
+from datetime import datetime
+from app.schemas import LivroResponse
+
+# simula um registro do banco (created_at/updated_at são datetimes naive em UTC)
+class Fake:
+    id=1; titulo='X'; autor='Y'; editora='Z'; ano_publicacao=2000; lido=False
+    created_at=datetime(2026,4,17,10,0,0)
+    updated_at=datetime(2026,4,17,10,30,15)
+
+dump = LivroResponse.model_validate(Fake()).model_dump(mode='json')
+print('created_at:', dump['created_at'])
+print('updated_at:', dump['updated_at'])
+"
+```
+
+Esperado:
+
+```
+created_at: 2026-04-17T10:00:00Z
+updated_at: 2026-04-17T10:30:15Z
+```
+
+Sem microssegundos, com sufixo `Z` — formato exato do design §2.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -207,7 +322,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T03 — schemas Pydantic
 - T04 — `POST /api/livros`
 - T05 — `GET /api/livros`
 - T06 — `GET /api/livros/{id}`
