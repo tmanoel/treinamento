@@ -292,6 +292,83 @@ Sem microssegundos, com sufixo `Z` — formato exato do design §2.
 
 ---
 
+## T04 — `POST /api/livros` (cadastrar livro)
+
+**O que a task entrega:** primeiro endpoint real. A pilha `Router → Service → Repository` está montada em [app/router.py](../app/router.py), [app/service.py](../app/service.py) e [app/repository.py](../app/repository.py). Validações do T03 agora entram em ação via Pydantic, e um handler de exceções em [app/main.py](../app/main.py) converte os 422 do Pydantic em `400` com mensagens descritivas em português.
+
+A partir daqui, a forma mais prática de testar é pelo **Swagger UI** (`/docs`) — o endpoint aparece lá com botão "Try it out".
+
+### 1. Via Swagger UI (navegador)
+
+Com o uvicorn rodando, acesse http://127.0.0.1:8000/docs
+
+- Clique em `POST /api/livros` → "Try it out"
+- Edite o JSON de exemplo
+- "Execute" → veja status, headers e corpo da resposta
+
+### 2. Via curl — happy path (201)
+
+```bash
+curl -i -X POST http://127.0.0.1:8000/api/livros ^
+  -H "Content-Type: application/json" ^
+  -d "{\"titulo\":\"O Senhor dos Anéis\",\"autor\":\"J.R.R. Tolkien\",\"editora\":\"HarperCollins\",\"ano_publicacao\":1954}"
+```
+
+> No PowerShell use aspas simples no corpo, ou prefira `Invoke-RestMethod`. O `^` acima é continuação de linha do `cmd.exe` do Windows.
+
+Esperado: `HTTP/1.1 201 Created` e um JSON com `id`, `created_at` e `updated_at` preenchidos pelo servidor, e `lido: false` (default RN02).
+
+### 3. Erros esperados (400)
+
+Campo ausente:
+```bash
+curl -i -X POST http://127.0.0.1:8000/api/livros -H "Content-Type: application/json" -d "{\"autor\":\"A\",\"editora\":\"E\",\"ano_publicacao\":2000}"
+```
+→ `400` + `{"detail":"titulo é obrigatório"}`
+
+String vazia ou só espaços:
+```bash
+curl -i -X POST http://127.0.0.1:8000/api/livros -H "Content-Type: application/json" -d "{\"titulo\":\"   \",\"autor\":\"A\",\"editora\":\"E\",\"ano_publicacao\":2000}"
+```
+→ `400` + `{"detail":"titulo é obrigatório"}`
+
+`ano_publicacao` fora do intervalo:
+```bash
+curl -i -X POST http://127.0.0.1:8000/api/livros -H "Content-Type: application/json" -d "{\"titulo\":\"T\",\"autor\":\"A\",\"editora\":\"E\",\"ano_publicacao\":2099}"
+```
+→ `400` + `{"detail":"ano_publicacao deve ser um número inteiro entre 1400 e 2026"}`
+
+### 4. Duplicata (409)
+
+Cadastre um livro qualquer, depois tente enviar de novo com título e autor equivalentes (a comparação é **case-insensitive** e ignora espaços das bordas):
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/livros -H "Content-Type: application/json" -d "{\"titulo\":\"Dom Casmurro\",\"autor\":\"Machado de Assis\",\"editora\":\"E\",\"ano_publicacao\":1899}"
+
+curl -i -X POST http://127.0.0.1:8000/api/livros -H "Content-Type: application/json" -d "{\"titulo\":\"DOM CASMURRO\",\"autor\":\"MACHADO DE ASSIS\",\"editora\":\"X\",\"ano_publicacao\":1900}"
+```
+→ `409` + `{"detail":"Já existe um livro com este título e autor"}`
+
+### 5. Verificar persistência
+
+Após os testes, confirme via SQLite que os livros ficaram gravados:
+```bash
+python -X utf8 -c "
+import sqlite3
+c = sqlite3.connect('biblioteca.db'); c.row_factory = sqlite3.Row
+for r in c.execute('SELECT id, titulo, autor, lido FROM livros'):
+    print(dict(r))
+"
+```
+
+### 6. Limpeza
+
+```bash
+python -X utf8 -c "from app.models import SessionLocal, Livro; s=SessionLocal(); s.query(Livro).delete(); s.commit()"
+```
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -322,7 +399,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T04 — `POST /api/livros`
 - T05 — `GET /api/livros`
 - T06 — `GET /api/livros/{id}`
 - T07 — `PATCH /api/livros/{id}`
