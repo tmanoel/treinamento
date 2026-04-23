@@ -28,3 +28,21 @@ def buscar_livro(db: Session, livro_id: int) -> Livro:
             detail="Livro não encontrado",
         )
     return livro
+
+
+def atualizar_livro(db: Session, livro_id: int, campos: dict) -> Livro:
+    livro = buscar_livro(db, livro_id)
+
+    novo_titulo = campos.get("titulo", livro.titulo)
+    novo_autor = campos.get("autor", livro.autor)
+    if ("titulo" in campos or "autor" in campos) and repository.existe_por_titulo_autor(
+        db, novo_titulo, novo_autor, excluir_id=livro_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um livro com este título e autor",
+        )
+
+    for campo, valor in campos.items():
+        setattr(livro, campo, valor)
+    return repository.atualizar(db, livro)

@@ -237,7 +237,7 @@ lido como string:
 
 > O `2026` na mensagem é interpolado em runtime via `datetime.now(tz=UTC).year`. Se o ano atual mudar, a mensagem acompanha.
 >
-> A mensagem de `lido` ainda sai com o texto padrão do Pydantic. T07 customiza para `"lido deve ser true ou false"` quando o PATCH for implementado.
+> No `LivroCreate` (POST) a mensagem de `lido` sai com o texto padrão do Pydantic. No `LivroUpdate` (PATCH, T07) a mensagem é customizada para `"lido deve ser true ou false"`.
 
 ### 3. LivroUpdate (todos os campos opcionais)
 
@@ -437,6 +437,103 @@ http://127.0.0.1:8000/docs → `GET /api/livros/{livro_id}` → "Try it out" →
 
 ---
 
+## T07 — `PATCH /api/livros/{id}` (editar)
+
+**O que a task entrega:** endpoint de edição parcial (RF04 + RF05). Aceita qualquer subconjunto dos campos de um livro — inclusive apenas `lido` para marcar como lido. O `updated_at` é atualizado automaticamente. Respeita a regra RN01 ignorando o próprio `id` na checagem de duplicata.
+
+### Ordem de validação
+
+As validações seguem esta precedência (definida em CLAUDE.md — a primeira que falhar é a que aparece na resposta):
+
+1. Body vazio (`{}`) → `"Informe ao menos um campo para atualizar"`
+2. `lido` não booleano → `"lido deve ser true ou false"`
+3. `ano_publicacao` fora do intervalo → `"ano_publicacao deve ser um número inteiro entre 1400 e {ano_atual}"`
+4. `titulo`/`autor`/`editora` vazio ou só espaços → `"<campo> não pode ser vazio"`
+
+### Setup
+
+Cadastre dois livros via `POST /api/livros` e anote os `id`s retornados. Os exemplos abaixo assumem `id=1` (O Hobbit) e `id=2` (Dom Casmurro).
+
+### 1. Happy path — editar qualquer campo (200)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"editora\":\"Allen & Unwin\",\"ano_publicacao\":1938}"
+```
+
+Esperado: `200 OK` + livro atualizado. O `updated_at` muda; o `created_at` permanece igual.
+
+### 2. Marcar como lido (RF04)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"lido\":true}"
+```
+
+Esperado: `200 OK` + `"lido": true`. Marcar como lido é só um caso particular da edição (decisão D06 — único endpoint cobre RF04 e RF05).
+
+### 3. Livro inexistente (404)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/9999 -H "Content-Type: application/json" -d "{\"lido\":true}"
+```
+
+Esperado: `404` + `{"detail":"Livro não encontrado"}`.
+
+### 4. Body vazio (400)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{}"
+```
+
+Esperado: `400` + `{"detail":"Informe ao menos um campo para atualizar"}`.
+
+### 5. `lido` não booleano (400)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"lido\":\"sim\"}"
+```
+
+Esperado: `400` + `{"detail":"lido deve ser true ou false"}`.
+
+### 6. `ano_publicacao` fora do intervalo (400)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"ano_publicacao\":2099}"
+```
+
+Esperado: `400` + `{"detail":"ano_publicacao deve ser um número inteiro entre 1400 e 2026"}`.
+
+### 7. Campo string vazio ou só espaços (400)
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"titulo\":\"   \"}"
+```
+
+Esperado: `400` + `{"detail":"titulo não pode ser vazio"}`.
+
+### 8. Duplicata em outro livro (409)
+
+Tente atualizar `id=2` (Dom Casmurro) para o mesmo título+autor do `id=1`:
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/2 -H "Content-Type: application/json" -d "{\"titulo\":\"O Hobbit\",\"autor\":\"Tolkien\"}"
+```
+
+Esperado: `409` + `{"detail":"Já existe um livro com este título e autor"}`. A comparação é case-insensitive e ignora espaços.
+
+### 9. Reenviar o mesmo título+autor do próprio livro NÃO gera 409
+
+```bash
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 -H "Content-Type: application/json" -d "{\"titulo\":\"O Hobbit\",\"autor\":\"Tolkien\",\"editora\":\"Outra\"}"
+```
+
+Esperado: `200 OK`. A checagem de duplicata ignora o próprio `id`.
+
+### 10. Via Swagger UI
+
+http://127.0.0.1:8000/docs → `PATCH /api/livros/{livro_id}` → "Try it out" → informe `livro_id` e um JSON parcial no corpo.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -467,7 +564,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T07 — `PATCH /api/livros/{id}`
 - T08 — `DELETE /api/livros/{id}`
 - T09 — filtros no `GET /api/livros`
 - T10 — testes automatizados (`pytest`)

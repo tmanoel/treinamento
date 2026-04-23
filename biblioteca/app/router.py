@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import service
 from app.models import SessionLocal
-from app.schemas import LivroCreate, LivroResponse
+from app.schemas import LivroCreate, LivroResponse, LivroUpdate
 
 router = APIRouter(prefix="/api")
 
@@ -38,3 +38,14 @@ def listar_livros(db: Session = Depends(get_db)):
 @router.get("/livros/{livro_id}", response_model=LivroResponse)
 def buscar_livro(livro_id: int, db: Session = Depends(get_db)):
     return service.buscar_livro(db, livro_id)
+
+
+@router.patch("/livros/{livro_id}", response_model=LivroResponse)
+def atualizar_livro(livro_id: int, payload: LivroUpdate, db: Session = Depends(get_db)):
+    campos = payload.model_dump(exclude_unset=True)
+    if not campos:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Informe ao menos um campo para atualizar",
+        )
+    return service.atualizar_livro(db, livro_id, campos)

@@ -42,11 +42,27 @@ class LivroCreate(BaseModel):
 
 
 class LivroUpdate(BaseModel):
+    lido: bool | None = None
+    ano_publicacao: int | None = None
     titulo: str | None = None
     autor: str | None = None
     editora: str | None = None
-    ano_publicacao: int | None = None
-    lido: StrictBool | None = None
+
+    @field_validator("lido", mode="before")
+    @classmethod
+    def _lido_bool(cls, v: object) -> bool | None:
+        if v is None:
+            return None
+        if not isinstance(v, bool):
+            raise ValueError("lido deve ser true ou false")
+        return v
+
+    @field_validator("ano_publicacao", mode="before")
+    @classmethod
+    def _ano(cls, v: object) -> int | None:
+        if v is None:
+            return None
+        return _validar_ano(v)
 
     @field_validator("titulo", "autor", "editora", mode="before")
     @classmethod
@@ -56,13 +72,6 @@ class LivroUpdate(BaseModel):
         if not isinstance(v, str) or not v.strip():
             raise ValueError(f"{info.field_name} não pode ser vazio")
         return v.strip()
-
-    @field_validator("ano_publicacao", mode="before")
-    @classmethod
-    def _ano(cls, v: object) -> int | None:
-        if v is None:
-            return None
-        return _validar_ano(v)
 
 
 class LivroResponse(BaseModel):

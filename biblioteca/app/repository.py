@@ -4,16 +4,16 @@ from sqlalchemy.orm import Session
 from app.models import Livro
 
 
-def existe_por_titulo_autor(db: Session, titulo: str, autor: str) -> bool:
-    return (
-        db.query(Livro)
-        .filter(
-            func.lower(Livro.titulo) == titulo.lower(),
-            func.lower(Livro.autor) == autor.lower(),
-        )
-        .first()
-        is not None
+def existe_por_titulo_autor(
+    db: Session, titulo: str, autor: str, excluir_id: int | None = None
+) -> bool:
+    query = db.query(Livro).filter(
+        func.lower(Livro.titulo) == titulo.lower(),
+        func.lower(Livro.autor) == autor.lower(),
     )
+    if excluir_id is not None:
+        query = query.filter(Livro.id != excluir_id)
+    return query.first() is not None
 
 
 def criar(db: Session, livro: Livro) -> Livro:
@@ -29,3 +29,9 @@ def listar(db: Session) -> list[Livro]:
 
 def buscar_por_id(db: Session, livro_id: int) -> Livro | None:
     return db.query(Livro).filter(Livro.id == livro_id).first()
+
+
+def atualizar(db: Session, livro: Livro) -> Livro:
+    db.commit()
+    db.refresh(livro)
+    return livro
