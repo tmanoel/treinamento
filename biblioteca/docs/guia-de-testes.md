@@ -369,6 +369,38 @@ python -X utf8 -c "from app.models import SessionLocal, Livro; s=SessionLocal();
 
 ---
 
+## T05 — `GET /api/livros` (listar)
+
+**O que a task entrega:** endpoint de listagem sem filtros. Retorna todos os livros cadastrados em ordem de `id` ascendente. Filtros por título/autor/editora/ano/lido só entram em T09.
+
+### 1. Lista vazia (base recém-criada)
+
+Com a tabela sem registros (use a limpeza de T04 se precisar):
+
+```bash
+curl -i http://127.0.0.1:8000/api/livros
+```
+
+Esperado: `200 OK` + corpo `[]`.
+
+### 2. Lista com vários livros
+
+Cadastre dois livros via `POST /api/livros`, depois:
+
+```bash
+curl -s http://127.0.0.1:8000/api/livros
+```
+
+Esperado: array com os dois livros, cada um contendo `id`, `titulo`, `autor`, `editora`, `ano_publicacao`, `lido`, `created_at` e `updated_at` (sempre com sufixo `Z`). Ordem por `id` ascendente.
+
+### 3. Via Swagger UI
+
+http://127.0.0.1:8000/docs → `GET /api/livros` → "Try it out" → "Execute". A resposta aparece com todos os livros do banco.
+
+> Em T09 este mesmo endpoint vai aceitar query params (`?autor=tolkien&lido=true` etc.). Por enquanto qualquer query param é ignorado.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -399,7 +431,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T05 — `GET /api/livros`
 - T06 — `GET /api/livros/{id}`
 - T07 — `PATCH /api/livros/{id}`
 - T08 — `DELETE /api/livros/{id}`

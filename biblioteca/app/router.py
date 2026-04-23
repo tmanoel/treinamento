@@ -28,3 +28,8 @@ def health() -> dict[str, str]:
 )
 def criar_livro(payload: LivroCreate, db: Session = Depends(get_db)):
     return service.criar_livro(db, payload)
+
+
+@router.get("/livros", response_model=list[LivroResponse])
+def listar_livros(db: Session = Depends(get_db)):
+    return service.listar_livros(db)

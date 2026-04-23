@@ -21,3 +21,7 @@ def criar(db: Session, livro: Livro) -> Livro:
     db.commit()
     db.refresh(livro)
     return livro
+
+
+def listar(db: Session) -> list[Livro]:
+    return db.query(Livro).order_by(Livro.id).all()

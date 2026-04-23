@@ -14,3 +14,7 @@ def criar_livro(db: Session, dados: LivroCreate) -> Livro:
         )
     livro = Livro(**dados.model_dump())
     return repository.criar(db, livro)
+
+
+def listar_livros(db: Session) -> list[Livro]:
+    return repository.listar(db)
