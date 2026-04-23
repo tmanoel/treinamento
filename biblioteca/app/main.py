@@ -1,5 +1,9 @@
 from fastapi import APIRouter, FastAPI
 
+from app.models import Base, engine
+
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Biblioteca Pessoal")
 
 api_router = APIRouter(prefix="/api")

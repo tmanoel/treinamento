@@ -1,4 +1,6 @@
 __pycache__/
 *.pyc
 
+biblioteca.db
+
 .claude/settings.local.json
