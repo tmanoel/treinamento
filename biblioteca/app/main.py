@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.models import Base, engine
 from app.router import router
@@ -9,6 +10,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Biblioteca Pessoal")
 app.include_router(router)
+app.mount("/", StaticFiles(directory="app/static", html=True), name="frontend")
 
 
 @app.exception_handler(RequestValidationError)

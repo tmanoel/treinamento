@@ -721,6 +721,52 @@ Isso é propositalmente simples: não há compartilhamento de estado. O custo é
 
 ---
 
+## T11 — Servir frontend estático
+
+**O que a task entrega:** a raiz `/` passa a servir os arquivos em [app/static/](../app/static/) via `StaticFiles(directory="app/static", html=True)`. A montagem é feita **depois** de `include_router(router)` para não sobrepor os endpoints REST sob `/api`. Nesta task os arquivos são apenas um placeholder — o conteúdo real vem em T12.
+
+### 1. `GET /` serve `index.html`
+
+Com o uvicorn rodando, acesse http://127.0.0.1:8000 no navegador.
+
+Esperado: a página com o título "Biblioteca Pessoal" e a mensagem "Frontend será implementado na T12." O `html=True` faz o FastAPI servir `index.html` automaticamente sem rota dedicada.
+
+Via curl:
+```bash
+curl -i http://127.0.0.1:8000/
+```
+→ `200 OK`, `Content-Type: text/html; charset=utf-8`, corpo com o HTML.
+
+### 2. Arquivos estáticos individuais
+
+```bash
+curl -i http://127.0.0.1:8000/style.css
+curl -i http://127.0.0.1:8000/script.js
+```
+
+Esperado: `200 OK` com `Content-Type` adequado (`text/css`, `text/javascript`).
+
+### 3. A API sob `/api` continua intacta
+
+Confira que a montagem da raiz não derrubou o roteador REST:
+
+```bash
+curl -i http://127.0.0.1:8000/api/health
+curl -i http://127.0.0.1:8000/api/livros
+```
+
+Ambos devem responder `200`. A ordem em [app/main.py](../app/main.py) — `include_router` **antes** do `app.mount("/")` — é o que garante isso.
+
+### 4. Caminho inexistente
+
+```bash
+curl -i http://127.0.0.1:8000/pagina-que-nao-existe
+```
+
+Esperado: `404`. O `StaticFiles` só serve arquivos realmente presentes em `app/static/`.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -751,6 +797,5 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T11 — servir frontend estático
 - T12 — frontend HTML/JS
 - T13 — README completo
