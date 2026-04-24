@@ -397,7 +397,7 @@ Esperado: array com os dois livros, cada um contendo `id`, `titulo`, `autor`, `e
 
 http://127.0.0.1:8000/docs → `GET /api/livros` → "Try it out" → "Execute". A resposta aparece com todos os livros do banco.
 
-> Em T09 este mesmo endpoint vai aceitar query params (`?autor=tolkien&lido=true` etc.). Por enquanto qualquer query param é ignorado.
+> A partir de T09 este endpoint aceita query params para busca e filtro (`?autor=tolkien&lido=true` etc.) — ver seção T09 abaixo.
 
 ---
 
@@ -429,7 +429,7 @@ Esperado: `404 Not Found` + `{"detail":"Livro não encontrado"}`.
 curl -i http://127.0.0.1:8000/api/livros/abc
 ```
 
-Esperado: `400 Bad Request`. O FastAPI tenta converter o path param para `int` e falha — o handler de validação em [app/main.py](../app/main.py) transforma o erro em `400` com mensagem descritiva.
+Esperado: `400` + `{"detail":"livro_id deve ser um número inteiro"}`. O handler de validação em [app/main.py](../app/main.py) traduz erros de parse de inteiro do Pydantic para português.
 
 ### 4. Via Swagger UI
 
@@ -576,6 +576,96 @@ http://127.0.0.1:8000/docs → `DELETE /api/livros/{livro_id}` → "Try it out" 
 
 ---
 
+## T09 — Filtros no `GET /api/livros`
+
+**O que a task entrega:** query params para busca e filtro no endpoint de listagem (RF07). Strings são busca parcial case-insensitive; número e booleano são filtro exato. Todos os filtros combinam com `AND`.
+
+| Param | Tipo | Comportamento |
+|---|---|---|
+| `titulo` | string | Busca parcial, case-insensitive (`ilike %valor%`) |
+| `autor` | string | Busca parcial, case-insensitive |
+| `editora` | string | Busca parcial, case-insensitive |
+| `ano_publicacao` | inteiro | Filtro exato |
+| `lido` | `true`/`false` | Filtro exato; aceita `true`/`false` (case-insensitive) **apenas em query param** |
+
+### Setup
+
+Cadastre alguns livros via `POST /api/livros` para ter o que filtrar. Os exemplos abaixo assumem quatro títulos misturando autores, editoras e anos.
+
+### 1. Busca parcial case-insensitive (strings)
+
+```bash
+curl -s "http://127.0.0.1:8000/api/livros?titulo=hobbit"
+curl -s "http://127.0.0.1:8000/api/livros?autor=MACHADO"
+curl -s "http://127.0.0.1:8000/api/livros?editora=collins"
+```
+
+Cada chamada retorna só os livros cujo campo **contém** o valor informado, ignorando maiúsculas/minúsculas.
+
+### 2. Filtro exato por ano e por lido
+
+```bash
+curl -s "http://127.0.0.1:8000/api/livros?ano_publicacao=1937"
+curl -s "http://127.0.0.1:8000/api/livros?lido=true"
+curl -s "http://127.0.0.1:8000/api/livros?lido=FALSE"
+```
+
+`lido` aceita qualquer combinação de maiúsculas/minúsculas (`true`, `True`, `TRUE`, `false`, `False`, `FALSE`).
+
+### 3. Combinação de filtros
+
+```bash
+curl -s "http://127.0.0.1:8000/api/livros?autor=tolkien&lido=false"
+```
+
+Retorna os livros do autor Tolkien que **ainda não foram lidos**. Os filtros se acumulam com `AND`.
+
+### 4. Lista vazia (200)
+
+```bash
+curl -i "http://127.0.0.1:8000/api/livros?autor=autor-inexistente"
+```
+
+Esperado: `200 OK` + corpo `[]`. Sem resultado **não é** 404 — a listagem filtrada existe, apenas está vazia.
+
+### 5. `lido` inválido (400)
+
+```bash
+curl -i "http://127.0.0.1:8000/api/livros?lido=sim"
+curl -i "http://127.0.0.1:8000/api/livros?lido=1"
+```
+
+Esperado em ambos: `400` + `{"detail":"lido deve ser true ou false"}`. Apenas os literais `true` e `false` (case-insensitive) são aceitos — outros valores do Pydantic como `1`, `0`, `yes`, `no` são rejeitados propositalmente.
+
+### 6. `ano_publicacao` não numérico (400)
+
+```bash
+curl -i "http://127.0.0.1:8000/api/livros?ano_publicacao=abc"
+```
+
+Esperado: `400` + `{"detail":"ano_publicacao deve ser um número inteiro"}`.
+
+### 7. Importante: a coerção de `lido` só vale em query param
+
+No corpo de `POST`/`PATCH`, `lido` precisa ser booleano JSON estrito:
+
+```bash
+# isto funciona — query param
+curl -s "http://127.0.0.1:8000/api/livros?lido=true"
+
+# isto falha — body com string em vez de booleano
+curl -i -X PATCH http://127.0.0.1:8000/api/livros/1 \
+  -H "Content-Type: application/json" \
+  -d "{\"lido\":\"true\"}"
+# → 400 "lido deve ser true ou false" (T07)
+```
+
+### 8. Via Swagger UI
+
+http://127.0.0.1:8000/docs → `GET /api/livros` → "Try it out". O Swagger mostra campos para cada query param; preencha só os que quiser usar.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -606,7 +696,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T09 — filtros no `GET /api/livros`
 - T10 — testes automatizados (`pytest`)
 - T11 — servir frontend estático
 - T12 — frontend HTML/JS

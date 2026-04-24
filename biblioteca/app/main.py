@@ -24,6 +24,8 @@ async def _traduzir_erro_validacao(request: Request, exc: RequestValidationError
 
     if tipo == "missing" and isinstance(campo, str):
         mensagem = f"{campo} é obrigatório"
+    elif tipo == "int_parsing" and isinstance(campo, str):
+        mensagem = f"{campo} deve ser um número inteiro"
     else:
         mensagem = err.get("msg", "").removeprefix("Value error, ")
 

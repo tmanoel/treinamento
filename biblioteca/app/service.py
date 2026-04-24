@@ -16,8 +16,22 @@ def criar_livro(db: Session, dados: LivroCreate) -> Livro:
     return repository.criar(db, livro)
 
 
-def listar_livros(db: Session) -> list[Livro]:
-    return repository.listar(db)
+def listar_livros(
+    db: Session,
+    titulo: str | None = None,
+    autor: str | None = None,
+    editora: str | None = None,
+    ano_publicacao: int | None = None,
+    lido: bool | None = None,
+) -> list[Livro]:
+    return repository.listar(
+        db,
+        titulo=titulo,
+        autor=autor,
+        editora=editora,
+        ano_publicacao=ano_publicacao,
+        lido=lido,
+    )
 
 
 def buscar_livro(db: Session, livro_id: int) -> Livro:

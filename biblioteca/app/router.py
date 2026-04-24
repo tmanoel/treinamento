@@ -30,9 +30,37 @@ def criar_livro(payload: LivroCreate, db: Session = Depends(get_db)):
     return service.criar_livro(db, payload)
 
 
+def _coerce_lido_query(valor: str | None) -> bool | None:
+    if valor is None:
+        return None
+    normalizado = valor.lower()
+    if normalizado == "true":
+        return True
+    if normalizado == "false":
+        return False
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="lido deve ser true ou false",
+    )
+
+
 @router.get("/livros", response_model=list[LivroResponse])
-def listar_livros(db: Session = Depends(get_db)):
-    return service.listar_livros(db)
+def listar_livros(
+    titulo: str | None = None,
+    autor: str | None = None,
+    editora: str | None = None,
+    ano_publicacao: int | None = None,
+    lido: str | None = None,
+    db: Session = Depends(get_db),
+):
+    return service.listar_livros(
+        db,
+        titulo=titulo,
+        autor=autor,
+        editora=editora,
+        ano_publicacao=ano_publicacao,
+        lido=_coerce_lido_query(lido),
+    )
 
 
 @router.get("/livros/{livro_id}", response_model=LivroResponse)

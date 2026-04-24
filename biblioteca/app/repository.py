@@ -23,8 +23,26 @@ def criar(db: Session, livro: Livro) -> Livro:
     return livro
 
 
-def listar(db: Session) -> list[Livro]:
-    return db.query(Livro).order_by(Livro.id).all()
+def listar(
+    db: Session,
+    titulo: str | None = None,
+    autor: str | None = None,
+    editora: str | None = None,
+    ano_publicacao: int | None = None,
+    lido: bool | None = None,
+) -> list[Livro]:
+    query = db.query(Livro)
+    if titulo is not None:
+        query = query.filter(Livro.titulo.ilike(f"%{titulo}%"))
+    if autor is not None:
+        query = query.filter(Livro.autor.ilike(f"%{autor}%"))
+    if editora is not None:
+        query = query.filter(Livro.editora.ilike(f"%{editora}%"))
+    if ano_publicacao is not None:
+        query = query.filter(Livro.ano_publicacao == ano_publicacao)
+    if lido is not None:
+        query = query.filter(Livro.lido == lido)
+    return query.order_by(Livro.id).all()
 
 
 def buscar_por_id(db: Session, livro_id: int) -> Livro | None:
