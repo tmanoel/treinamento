@@ -800,6 +800,50 @@ Se clicar Cancelar no `confirm`, **nada acontece** (nenhuma chamada à API).
 
 Se a API retornar um erro (por exemplo, `404` porque o livro foi removido em outra aba), a mensagem no topo fica vermelha e exibe o `detail` da resposta em português — exatamente como veio da API (ex.: `"Livro não encontrado"`).
 
+### T12.2 — Cadastro
+
+Acima da tabela agora aparece o formulário **"Cadastrar livro"** com cinco campos: `titulo`, `autor`, `editora`, `ano_publicacao`, checkbox **"Já li este livro"** e botão **Cadastrar**.
+
+#### 1. Cadastro válido
+
+Preencha todos os campos com valores válidos (ex.: "Duna", "Frank Herbert", "Chilton", 1965, deixe o checkbox desmarcado). Clique **Cadastrar**.
+
+Esperado:
+- Network: `POST /api/livros` com `201 Created`
+- Mensagem verde: `"Duna" cadastrado.`
+- O formulário é limpo (`form.reset()`).
+- A tabela abaixo recarrega com a nova linha.
+
+#### 2. Marcar como lido no cadastro
+
+Marque o checkbox **"Já li este livro"** antes de submeter. O JSON enviado leva `"lido": true` e a coluna "Lido" na tabela mostra "Sim".
+
+Se deixar desmarcado, envia `"lido": false` (nunca `null`).
+
+#### 3. Campo vazio
+
+Deixe **titulo** em branco e clique Cadastrar. A API retorna `400` com `detail: "titulo é obrigatório"` (ou equivalente se outro campo estiver vazio).
+
+Esperado:
+- Mensagem vermelha com o `detail` da API.
+- **Os demais campos preenchidos permanecem** — o form só é resetado em caso de sucesso.
+
+> O formulário usa `novalidate`, ou seja, a validação HTML5 nativa está desligada de propósito: quem valida é o backend. Isso garante que a mensagem esteja sempre em português e no mesmo formato dos outros clientes (curl, Swagger).
+
+#### 4. Ano fora do intervalo
+
+Preencha tudo corretamente, mas use `ano_publicacao = 1200`. Esperado: mensagem vermelha com `"ano_publicacao deve ser um número inteiro entre 1400 e 2026"` (o ano final é o ano corrente).
+
+Faça o mesmo com um ano futuro (`2099`). Mesma mensagem.
+
+#### 5. Duplicata (RN01)
+
+Cadastre "O Hobbit" / "J.R.R. Tolkien". Tente cadastrar novamente com o **mesmo título e autor** (pode variar caixa/maiúsculas: "O HOBBIT"). A API retorna `409` e a mensagem vermelha é `"Já existe um livro com este título e autor"`.
+
+#### 6. Tipo inválido no ano
+
+Como o input é `type="number"`, o navegador só aceita dígitos. Mas se você digitar manualmente via DevTools/console um valor string, a API retorna `"ano_publicacao deve ser um número inteiro"`.
+
 ---
 
 ## Problemas comuns
@@ -832,6 +876,5 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T12.2 — frontend: formulário de cadastro
 - T12.3 — frontend: editar, marcar lido e filtros
 - T13 — README completo

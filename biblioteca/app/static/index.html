@@ -11,6 +11,37 @@
     <div id="mensagem" role="status" aria-live="polite"></div>
 
     <section>
+        <h2>Cadastrar livro</h2>
+        <form id="form-cadastro" novalidate>
+            <div class="campo">
+                <label for="titulo">Título</label>
+                <input id="titulo" name="titulo" type="text" required>
+            </div>
+            <div class="campo">
+                <label for="autor">Autor</label>
+                <input id="autor" name="autor" type="text" required>
+            </div>
+            <div class="campo">
+                <label for="editora">Editora</label>
+                <input id="editora" name="editora" type="text" required>
+            </div>
+            <div class="campo">
+                <label for="ano_publicacao">Ano de publicação</label>
+                <input id="ano_publicacao" name="ano_publicacao" type="number" required>
+            </div>
+            <div class="campo campo-checkbox">
+                <label>
+                    <input id="lido" name="lido" type="checkbox">
+                    Já li este livro
+                </label>
+            </div>
+            <div class="campo-acoes">
+                <button type="submit">Cadastrar</button>
+            </div>
+        </form>
+    </section>
+
+    <section>
         <h2>Livros cadastrados</h2>
         <table id="tabela-livros">
             <thead>

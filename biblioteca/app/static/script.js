@@ -3,6 +3,7 @@ const API = "/api";
 const tbody = document.querySelector("#tabela-livros tbody");
 const listaVazia = document.querySelector("#lista-vazia");
 const mensagem = document.querySelector("#mensagem");
+const formCadastro = document.querySelector("#form-cadastro");
 
 function mostrarMensagem(texto, tipo) {
     mensagem.textContent = texto;
@@ -63,6 +64,38 @@ async function removerLivro(livro) {
     mostrarMensagem(detalhe, "erro");
 }
 
+async function cadastrarLivro(evento) {
+    evento.preventDefault();
+    limparMensagem();
+
+    const dados = new FormData(formCadastro);
+    const anoBruto = dados.get("ano_publicacao");
+    const payload = {
+        titulo: dados.get("titulo"),
+        autor: dados.get("autor"),
+        editora: dados.get("editora"),
+        ano_publicacao: anoBruto === "" ? null : Number(anoBruto),
+        lido: dados.get("lido") === "on",
+    };
+
+    const resp = await fetch(`${API}/livros`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (resp.status === 201) {
+        const criado = await resp.json();
+        mostrarMensagem(`"${criado.titulo}" cadastrado.`, "sucesso");
+        formCadastro.reset();
+        await carregarLivros();
+        return;
+    }
+
+    const detalhe = await extrairDetalhe(resp);
+    mostrarMensagem(detalhe, "erro");
+}
+
 async function extrairDetalhe(resp) {
     try {
         const corpo = await resp.json();
@@ -74,5 +107,6 @@ async function extrairDetalhe(resp) {
 
 document.addEventListener("DOMContentLoaded", () => {
     limparMensagem();
+    formCadastro.addEventListener("submit", cadastrarLivro);
     carregarLivros();
 });
