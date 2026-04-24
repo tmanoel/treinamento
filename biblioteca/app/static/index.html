@@ -42,6 +42,40 @@
     </section>
 
     <section>
+        <h2>Filtros</h2>
+        <form id="form-filtros" novalidate>
+            <div class="campo">
+                <label for="filtro-titulo">Título contém</label>
+                <input id="filtro-titulo" name="titulo" type="text">
+            </div>
+            <div class="campo">
+                <label for="filtro-autor">Autor contém</label>
+                <input id="filtro-autor" name="autor" type="text">
+            </div>
+            <div class="campo">
+                <label for="filtro-editora">Editora contém</label>
+                <input id="filtro-editora" name="editora" type="text">
+            </div>
+            <div class="campo">
+                <label for="filtro-ano">Ano</label>
+                <input id="filtro-ano" name="ano_publicacao" type="number">
+            </div>
+            <div class="campo">
+                <label for="filtro-lido">Lido</label>
+                <select id="filtro-lido" name="lido">
+                    <option value="">todos</option>
+                    <option value="true">sim</option>
+                    <option value="false">não</option>
+                </select>
+            </div>
+            <div class="campo-acoes">
+                <button type="submit">Filtrar</button>
+                <button type="button" id="btn-limpar-filtros">Limpar</button>
+            </div>
+        </form>
+    </section>
+
+    <section>
         <h2>Livros cadastrados</h2>
         <table id="tabela-livros">
             <thead>

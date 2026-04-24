@@ -844,6 +844,87 @@ Cadastre "O Hobbit" / "J.R.R. Tolkien". Tente cadastrar novamente com o **mesmo 
 
 Como o input é `type="number"`, o navegador só aceita dígitos. Mas se você digitar manualmente via DevTools/console um valor string, a API retorna `"ano_publicacao deve ser um número inteiro"`.
 
+### T12.3 — Editar, marcar lido e filtros
+
+A tabela ganha três novos recursos:
+
+- **Checkbox "Lido"** direto na linha — click dispara um `PATCH` com `{"lido": true/false}` sem abrir edição.
+- **Botão "Editar"** — transforma a linha em edição inline. Os `td` viram inputs (`text` para título/autor/editora, `number` para ano, checkbox para lido). Aparecem **Salvar** e **Cancelar** no lugar de Editar/Remover.
+- **Seção "Filtros"** acima da tabela, com campos `titulo`/`autor`/`editora` (contém), `ano` (=) e select `lido` (todos/sim/não), mais botões **Filtrar** e **Limpar**.
+
+#### 1. Marcar como lido pela tabela
+
+Clique no checkbox da coluna "Lido" em uma linha cujo valor é **Não**. Esperado:
+- Network: `PATCH /api/livros/{id}` com body `{"lido": true}` → `200 OK`.
+- O checkbox fica marcado.
+- Mensagem verde: `"<titulo>" marcado como lido.`
+
+Clique de novo para desmarcar: mesmo fluxo, body `{"lido": false}`, mensagem `"... marcado como não lido."`.
+
+Se a API retornar erro (ex.: livro removido em outra aba), o checkbox **volta ao estado anterior** e a mensagem vermelha mostra o `detail`.
+
+#### 2. Editar inline — caminho feliz
+
+Clique **Editar** em uma linha. Os 5 campos viram inputs. Altere algum (ex.: troque `editora`) e clique **Salvar**.
+
+Esperado:
+- Network: `PATCH /api/livros/{id}` com body contendo **só os campos alterados** (ex.: `{"editora":"Nova"}`).
+- Resposta `200 OK`.
+- A linha volta ao modo normal com o valor atualizado.
+- Mensagem verde: `"<titulo>" atualizado.`
+
+> Se clicar Salvar sem alterar nada, o diff fica vazio e o frontend **não chama a API** — apenas sai do modo edição (evita enviar PATCH com body `{}` que a API rejeitaria com `"Informe ao menos um campo para atualizar"`).
+
+#### 3. Editar inline — cancelar
+
+Clique **Editar**, altere valores e clique **Cancelar**. Esperado:
+- Nenhuma chamada à API.
+- A linha volta ao estado original (valores antigos).
+
+#### 4. Edição com erro (duplicata)
+
+Cadastre dois livros distintos: "A / Autor1" e "B / Autor2". Entre em edição de "B", troque `titulo` para "A" e `autor` para "Autor1". Clique Salvar.
+
+Esperado:
+- Network: `PATCH` → `409`.
+- Mensagem vermelha: `Já existe um livro com este título e autor`.
+- A linha **continua em modo edição** com os valores que você digitou (para você corrigir).
+
+#### 5. Edição com erro (ano inválido)
+
+Entre em edição de qualquer livro, troque o ano para `1200`. Salvar → `400` → mensagem `ano_publicacao deve ser um número inteiro entre 1400 e 2026`. Linha permanece em edição.
+
+#### 6. Filtro por texto (contém)
+
+Cadastre livros com títulos variados. Digite parte de um título no campo "Título contém" e clique **Filtrar**.
+
+Esperado:
+- Network: `GET /api/livros?titulo=<valor>` → `200`.
+- Tabela mostra só as linhas que casam (comparação case-insensitive, substring — validado no backend).
+
+Se nada casar: a tabela fica vazia e o placeholder muda para `"Nenhum livro encontrado."` (em vez de `"Nenhum livro cadastrado."`).
+
+#### 7. Filtro por ano (igualdade) e por lido
+
+No campo "Ano" digite um ano exato (ex.: `1937`). Na combinação, selecione `lido=sim`. Filtrar.
+
+Esperado: Network `GET /api/livros?ano_publicacao=1937&lido=true`. A lista é interseção dos critérios (AND).
+
+#### 8. Limpar filtros
+
+Com filtros aplicados, clique **Limpar**. Esperado:
+- Form de filtros é resetado.
+- Network: `GET /api/livros` **sem query string**.
+- Lista volta a mostrar todos os livros.
+
+#### 9. Filtros persistem após cadastro / remoção / edição
+
+Com `titulo=Hob` filtrado, cadastre "O Hobbit (Edição Ilustrada)". Esperado: ele aparece na tabela (bateu o filtro) e a mensagem "cadastrado" é exibida. A query string do `GET` subsequente mantém `titulo=Hob`.
+
+Se cadastrar um livro que **não** bate com o filtro ativo, o `201` acontece mas a linha não aparece (não bateu) — o contador/lista reflete o filtro vigente.
+
+Mesmo comportamento após remover ou salvar edição: o `GET` de recarga sempre reaplica os filtros atuais.
+
 ---
 
 ## Problemas comuns
@@ -876,5 +957,4 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T12.3 — frontend: editar, marcar lido e filtros
 - T13 — README completo
