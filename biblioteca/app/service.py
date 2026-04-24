@@ -46,3 +46,8 @@ def atualizar_livro(db: Session, livro_id: int, campos: dict) -> Livro:
     for campo, valor in campos.items():
         setattr(livro, campo, valor)
     return repository.atualizar(db, livro)
+
+
+def remover_livro(db: Session, livro_id: int) -> None:
+    livro = buscar_livro(db, livro_id)
+    repository.remover(db, livro)

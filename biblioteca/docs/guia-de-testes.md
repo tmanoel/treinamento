@@ -534,6 +534,48 @@ http://127.0.0.1:8000/docs → `PATCH /api/livros/{livro_id}` → "Try it out" �
 
 ---
 
+## T08 — `DELETE /api/livros/{id}` (remover)
+
+**O que a task entrega:** endpoint de remoção (RF06). Retorna `204 No Content` em sucesso (sem corpo) e `404` se o livro não existir.
+
+### 1. Happy path (204)
+
+Cadastre um livro via `POST /api/livros` e anote o `id`. Depois:
+
+```bash
+curl -i -X DELETE http://127.0.0.1:8000/api/livros/1
+```
+
+Esperado: `HTTP/1.1 204 No Content` — **sem corpo de resposta**. `204` indica sucesso e que o cliente não precisa atualizar a view (é o recomendado para `DELETE` pela RFC 7231).
+
+### 2. Confirmar que o livro sumiu
+
+```bash
+curl -i http://127.0.0.1:8000/api/livros/1
+```
+
+Esperado: `404` + `{"detail":"Livro não encontrado"}`.
+
+```bash
+curl -s http://127.0.0.1:8000/api/livros
+```
+
+O livro removido não aparece mais na listagem.
+
+### 3. Remover livro inexistente (404)
+
+```bash
+curl -i -X DELETE http://127.0.0.1:8000/api/livros/9999
+```
+
+Esperado: `404` + `{"detail":"Livro não encontrado"}`.
+
+### 4. Via Swagger UI
+
+http://127.0.0.1:8000/docs → `DELETE /api/livros/{livro_id}` → "Try it out" → informe o `id` → "Execute". A resposta aparece com `Response body` vazio e `Code: 204`.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -564,7 +606,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T08 — `DELETE /api/livros/{id}`
 - T09 — filtros no `GET /api/livros`
 - T10 — testes automatizados (`pytest`)
 - T11 — servir frontend estático

@@ -35,3 +35,8 @@ def atualizar(db: Session, livro: Livro) -> Livro:
     db.commit()
     db.refresh(livro)
     return livro
+
+
+def remover(db: Session, livro: Livro) -> None:
+    db.delete(livro)
+    db.commit()

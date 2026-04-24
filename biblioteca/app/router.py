@@ -49,3 +49,8 @@ def atualizar_livro(livro_id: int, payload: LivroUpdate, db: Session = Depends(g
             detail="Informe ao menos um campo para atualizar",
         )
     return service.atualizar_livro(db, livro_id, campos)
+
+
+@router.delete("/livros/{livro_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remover_livro(livro_id: int, db: Session = Depends(get_db)) -> None:
+    service.remover_livro(db, livro_id)
