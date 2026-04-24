@@ -767,6 +767,41 @@ Esperado: `404`. O `StaticFiles` só serve arquivos realmente presentes em `app/
 
 ---
 
+## T12 — Frontend funcional (HTML + JS)
+
+**O que a task entrega:** interface no navegador que consome a API REST, construída em JavaScript vanilla (sem bibliotecas). Os três arquivos em [app/static/](../app/static/) — `index.html`, `style.css`, `script.js` — são preenchidos de forma incremental.
+
+Com o uvicorn rodando, abra http://127.0.0.1:8000/ no navegador. Os testes abaixo são **manuais no browser**: abra as DevTools (F12) → aba Network para acompanhar as chamadas à API sob `/api`.
+
+### T12.1 — Listagem e remoção
+
+#### 1. Lista vazia
+
+Com o `biblioteca.db` sem livros (ou recém-criado), a tela mostra "Nenhum livro cadastrado." e a tabela fica sem linhas.
+
+#### 2. Listagem automática
+
+Cadastre dois livros via `POST /api/livros` (use curl ou Swagger — ver seção T04). Recarregue a página: a tabela aparece com uma linha por livro, exibindo `titulo`, `autor`, `editora`, `ano_publicacao`, `lido` (como "Sim"/"Não") e um botão **Remover**.
+
+Na aba Network, a chamada deve ser `GET /api/livros` com `200 OK`.
+
+#### 3. Remoção com confirmação
+
+Clique em **Remover** na linha de um livro. O navegador exibe um `confirm()` — clique OK.
+
+Esperado:
+- Network: `DELETE /api/livros/{id}` com `204 No Content`
+- Mensagem verde no topo: `"<titulo>" removido.`
+- A linha desaparece da tabela. Se não sobrar nenhum livro, "Nenhum livro cadastrado." reaparece.
+
+Se clicar Cancelar no `confirm`, **nada acontece** (nenhuma chamada à API).
+
+#### 4. Tratamento de erro
+
+Se a API retornar um erro (por exemplo, `404` porque o livro foi removido em outra aba), a mensagem no topo fica vermelha e exibe o `detail` da resposta em português — exatamente como veio da API (ex.: `"Livro não encontrado"`).
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -797,5 +832,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T12 — frontend HTML/JS
+- T12.2 — frontend: formulário de cadastro
+- T12.3 — frontend: editar, marcar lido e filtros
 - T13 — README completo

@@ -1,1 +1,71 @@
-/* Placeholder — estilos serão implementados na T12. */
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    line-height: 1.5;
+    color: #222;
+}
+
+h1 {
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    margin-top: 2rem;
+    font-size: 1.25rem;
+}
+
+#mensagem {
+    min-height: 1.25rem;
+    margin: 1rem 0;
+}
+
+#mensagem:not(:empty) {
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+
+.mensagem-sucesso {
+    background: #e6f7e6;
+    color: #0a6c0a;
+    border-color: #9cd69c !important;
+}
+
+.mensagem-erro {
+    background: #fde7e7;
+    color: #a30000;
+    border-color: #f5b5b5 !important;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+th, td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    background: #f4f4f4;
+    font-weight: 600;
+}
+
+button {
+    cursor: pointer;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid #bbb;
+    background: #fff;
+    border-radius: 3px;
+}
+
+button:hover {
+    background: #f0f0f0;
+}
