@@ -666,6 +666,61 @@ http://127.0.0.1:8000/docs → `GET /api/livros` → "Try it out". O Swagger mos
 
 ---
 
+## T10 — Testes automatizados (`pytest`)
+
+**O que a task entrega:** suíte de testes em [tests/test_livros.py](../tests/test_livros.py) cobrindo os critérios de aceitação de todas as US (US01–US07) e o health check (RNF06). Os testes usam um banco SQLite em memória isolado — **o `biblioteca.db` da sua máquina não é tocado**.
+
+### 1. Instalar dependências de teste
+
+`pytest` e `httpx` já fazem parte de [requirements.txt](../requirements.txt):
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Rodar a suíte
+
+Na raiz do projeto:
+
+```bash
+pytest
+```
+
+Ou com saída mais descritiva:
+
+```bash
+pytest -v
+```
+
+Esperado: todos os testes passam. A suíte leva ~2s para rodar (um dos testes aguarda 1,1s para confirmar que o `updated_at` muda em relação ao `created_at`).
+
+### 3. Rodar apenas os testes de uma US
+
+Como cada teste é nomeado `test_usNN_...`, dá para filtrar via `-k`:
+
+```bash
+pytest -k us01     # só US01 (cadastro)
+pytest -k us06     # só US06 (filtros)
+pytest -k health   # só o health check
+```
+
+### 4. Estrutura
+
+- [tests/conftest.py](../tests/conftest.py) — fixture `client`: cria um engine SQLite em memória (via `StaticPool` para compartilhar a mesma conexão dentro do teste), sobrescreve a dependência `get_db` do FastAPI e devolve um `TestClient`. Cada teste recebe um banco novo e limpo.
+- [tests/test_livros.py](../tests/test_livros.py) — 35 testes agrupados por user story.
+
+### 5. Isolamento entre testes
+
+Cada teste recebe uma fixture `client` nova, o que significa:
+
+- Banco SQLite em memória dedicado (não persiste nada);
+- IDs sempre começam em 1;
+- `app.dependency_overrides` é limpo no teardown.
+
+Isso é propositalmente simples: não há compartilhamento de estado. O custo é ~50ms por teste para setup do banco, irrelevante na escala atual.
+
+---
+
 ## Problemas comuns
 
 ### `Device or resource busy` ao remover `biblioteca.db`
@@ -696,7 +751,6 @@ E ajuste as URLs dos testes (`http://127.0.0.1:8001/...`).
 
 Este guia será atualizado conforme novas tasks forem implementadas. Ordem sugerida em [06-tasks.md](06-tasks.md):
 
-- T10 — testes automatizados (`pytest`)
 - T11 — servir frontend estático
 - T12 — frontend HTML/JS
 - T13 — README completo
