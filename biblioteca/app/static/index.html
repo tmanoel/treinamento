@@ -68,6 +68,26 @@
                     <option value="false">não</option>
                 </select>
             </div>
+            <div class="campo">
+                <label for="filtro-emprestado">Emprestado</label>
+                <select id="filtro-emprestado" name="emprestado">
+                    <option value="">todos</option>
+                    <option value="true">sim</option>
+                    <option value="false">não</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="filtro-emprestado-para">Emprestado para</label>
+                <input id="filtro-emprestado-para" name="emprestado_para" type="text">
+            </div>
+            <div class="campo">
+                <label for="filtro-emprestado-desde">Emprestado desde</label>
+                <input id="filtro-emprestado-desde" name="emprestado_desde" type="datetime-local">
+            </div>
+            <div class="campo">
+                <label for="filtro-emprestado-ate">Emprestado até</label>
+                <input id="filtro-emprestado-ate" name="emprestado_ate" type="datetime-local">
+            </div>
             <div class="campo-acoes">
                 <button type="submit">Filtrar</button>
                 <button type="button" id="btn-limpar-filtros">Limpar</button>
@@ -85,6 +105,7 @@
                     <th>Editora</th>
                     <th>Ano</th>
                     <th>Lido</th>
+                    <th>Empréstimo</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -92,6 +113,59 @@
         </table>
         <p id="lista-vazia" hidden>Nenhum livro cadastrado.</p>
     </section>
+
+    <dialog id="dialog-emprestar">
+        <form id="form-emprestar" method="dialog">
+            <h2>Emprestar livro</h2>
+            <p id="emprestar-titulo-livro" class="dialog-livro"></p>
+            <div class="campo">
+                <label for="emprestar-para">Emprestado para</label>
+                <input id="emprestar-para" name="emprestado_para" type="text" required>
+            </div>
+            <div class="campo">
+                <label for="emprestar-data">Data do empréstimo</label>
+                <input id="emprestar-data" name="data_emprestimo" type="datetime-local" required>
+            </div>
+            <div class="campo-acoes">
+                <button type="submit" value="confirmar">Confirmar</button>
+                <button type="button" data-fechar-dialog="dialog-emprestar">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dialog-devolver">
+        <form id="form-devolver" method="dialog">
+            <h2>Devolver livro</h2>
+            <p id="devolver-titulo-livro" class="dialog-livro"></p>
+            <div class="campo">
+                <label for="devolver-data">Data da devolução</label>
+                <input id="devolver-data" name="data_devolucao" type="datetime-local" required>
+            </div>
+            <div class="campo-acoes">
+                <button type="submit" value="confirmar">Confirmar</button>
+                <button type="button" data-fechar-dialog="dialog-devolver">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dialog-historico">
+        <h2>Histórico de empréstimos</h2>
+        <p id="historico-titulo-livro" class="dialog-livro"></p>
+        <table id="tabela-historico">
+            <thead>
+                <tr>
+                    <th>Para</th>
+                    <th>Empréstimo</th>
+                    <th>Devolução</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <p id="historico-vazio" hidden>Este livro ainda não foi emprestado.</p>
+        <div class="campo-acoes">
+            <button type="button" data-fechar-dialog="dialog-historico">Fechar</button>
+        </div>
+    </dialog>
 
     <script src="script.js"></script>
 </body>

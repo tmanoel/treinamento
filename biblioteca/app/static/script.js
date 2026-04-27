@@ -7,8 +7,17 @@ const formCadastro = document.querySelector("#form-cadastro");
 const formFiltros = document.querySelector("#form-filtros");
 const btnLimparFiltros = document.querySelector("#btn-limpar-filtros");
 
+const dialogEmprestar = document.querySelector("#dialog-emprestar");
+const dialogDevolver = document.querySelector("#dialog-devolver");
+const dialogHistorico = document.querySelector("#dialog-historico");
+const formEmprestar = document.querySelector("#form-emprestar");
+const formDevolver = document.querySelector("#form-devolver");
+const tbodyHistorico = document.querySelector("#tabela-historico tbody");
+const historicoVazio = document.querySelector("#historico-vazio");
+
 let livrosAtuais = [];
 let idEmEdicao = null;
+let livroEmAcao = null;
 
 function mostrarMensagem(texto, tipo) {
     mensagem.textContent = texto;
@@ -20,13 +29,41 @@ function limparMensagem() {
     mensagem.className = "";
 }
 
+const FILTROS_DATA = new Set(["emprestado_desde", "emprestado_ate"]);
+
 function filtrosAtivos() {
     const dados = new FormData(formFiltros);
     const params = new URLSearchParams();
     for (const [chave, valor] of dados.entries()) {
-        if (valor !== "") params.set(chave, valor);
+        if (valor === "") continue;
+        params.set(chave, FILTROS_DATA.has(chave) ? localParaUTC(valor) : valor);
     }
     return params.toString();
+}
+
+function localParaUTC(valorLocal) {
+    const dt = new Date(valorLocal);
+    if (Number.isNaN(dt.getTime())) return valorLocal;
+    return dt.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+function agoraLocal() {
+    const dt = new Date();
+    const offset = dt.getTimezoneOffset() * 60000;
+    return new Date(dt.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function formatarDataUTC(iso) {
+    if (!iso) return "";
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return iso;
+    return dt.toLocaleString("pt-BR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 }
 
 async function carregarLivros() {
@@ -69,9 +106,21 @@ function linhaNormal(livro) {
     tdLido.appendChild(checkLido);
     tr.appendChild(tdLido);
 
+    const tdEmprestimo = document.createElement("td");
+    tdEmprestimo.textContent = livro.emprestado
+        ? `${livro.emprestado_para} desde ${formatarDataUTC(livro.data_emprestimo)}`
+        : "—";
+    tr.appendChild(tdEmprestimo);
+
     const tdAcoes = document.createElement("td");
     tdAcoes.className = "acoes";
     tdAcoes.appendChild(criarBotao("Editar", () => entrarEdicao(livro.id)));
+    tdAcoes.appendChild(
+        livro.emprestado
+            ? criarBotao("Devolver", () => abrirDialogDevolver(livro))
+            : criarBotao("Emprestar", () => abrirDialogEmprestar(livro))
+    );
+    tdAcoes.appendChild(criarBotao("Histórico", () => abrirDialogHistorico(livro)));
     tdAcoes.appendChild(criarBotao("Remover", () => removerLivro(livro)));
     tr.appendChild(tdAcoes);
 
@@ -108,6 +157,12 @@ function linhaEdicao(livro) {
     tdLido.appendChild(checkLido);
     tr.appendChild(tdLido);
     inputs.lido = checkLido;
+
+    const tdEmprestimo = document.createElement("td");
+    tdEmprestimo.textContent = livro.emprestado
+        ? `${livro.emprestado_para} desde ${formatarDataUTC(livro.data_emprestimo)}`
+        : "—";
+    tr.appendChild(tdEmprestimo);
 
     const tdAcoes = document.createElement("td");
     tdAcoes.className = "acoes";
@@ -261,6 +316,106 @@ async function limparFiltros() {
     await carregarLivros();
 }
 
+function abrirDialogEmprestar(livro) {
+    livroEmAcao = livro;
+    document.querySelector("#emprestar-titulo-livro").textContent = `"${livro.titulo}"`;
+    document.querySelector("#emprestar-para").value = "";
+    document.querySelector("#emprestar-data").value = agoraLocal();
+    dialogEmprestar.showModal();
+}
+
+function abrirDialogDevolver(livro) {
+    livroEmAcao = livro;
+    document.querySelector("#devolver-titulo-livro").textContent =
+        `"${livro.titulo}" emprestado para ${livro.emprestado_para}`;
+    document.querySelector("#devolver-data").value = agoraLocal();
+    dialogDevolver.showModal();
+}
+
+async function abrirDialogHistorico(livro) {
+    livroEmAcao = livro;
+    document.querySelector("#historico-titulo-livro").textContent = `"${livro.titulo}"`;
+    tbodyHistorico.innerHTML = "";
+    historicoVazio.hidden = true;
+    dialogHistorico.showModal();
+
+    const resp = await fetch(`${API}/livros/${livro.id}/emprestimos`);
+    if (!resp.ok) {
+        const detalhe = await extrairDetalhe(resp);
+        mostrarMensagem(detalhe, "erro");
+        dialogHistorico.close();
+        return;
+    }
+
+    const emprestimos = await resp.json();
+    historicoVazio.hidden = emprestimos.length > 0;
+    for (const emp of emprestimos) {
+        const tr = document.createElement("tr");
+        adicionarCelula(tr, emp.emprestado_para);
+        adicionarCelula(tr, formatarDataUTC(emp.data_emprestimo));
+        adicionarCelula(tr, emp.data_devolucao ? formatarDataUTC(emp.data_devolucao) : "—");
+        tbodyHistorico.appendChild(tr);
+    }
+}
+
+async function confirmarEmprestimo(evento) {
+    if (!livroEmAcao) return;
+    evento.preventDefault();
+    limparMensagem();
+
+    const dados = new FormData(formEmprestar);
+    const payload = {
+        emprestado_para: dados.get("emprestado_para"),
+        data_emprestimo: localParaUTC(dados.get("data_emprestimo")),
+    };
+
+    const resp = await fetch(`${API}/livros/${livroEmAcao.id}/emprestimos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (resp.status === 201) {
+        mostrarMensagem(
+            `"${livroEmAcao.titulo}" emprestado para ${payload.emprestado_para}.`,
+            "sucesso",
+        );
+        dialogEmprestar.close();
+        livroEmAcao = null;
+        await carregarLivros();
+        return;
+    }
+
+    const detalhe = await extrairDetalhe(resp);
+    mostrarMensagem(detalhe, "erro");
+}
+
+async function confirmarDevolucao(evento) {
+    if (!livroEmAcao) return;
+    evento.preventDefault();
+    limparMensagem();
+
+    const dados = new FormData(formDevolver);
+    const payload = { data_devolucao: localParaUTC(dados.get("data_devolucao")) };
+
+    const resp = await fetch(`${API}/livros/${livroEmAcao.id}/emprestimos`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (resp.ok) {
+        mostrarMensagem(`"${livroEmAcao.titulo}" devolvido.`, "sucesso");
+        dialogDevolver.close();
+        livroEmAcao = null;
+        await carregarLivros();
+        return;
+    }
+
+    const detalhe = await extrairDetalhe(resp);
+    mostrarMensagem(detalhe, "erro");
+}
+
 async function extrairDetalhe(resp) {
     try {
         const corpo = await resp.json();
@@ -275,5 +430,13 @@ document.addEventListener("DOMContentLoaded", () => {
     formCadastro.addEventListener("submit", cadastrarLivro);
     formFiltros.addEventListener("submit", aplicarFiltros);
     btnLimparFiltros.addEventListener("click", limparFiltros);
+    formEmprestar.addEventListener("submit", confirmarEmprestimo);
+    formDevolver.addEventListener("submit", confirmarDevolucao);
+    document.querySelectorAll("[data-fechar-dialog]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const dlg = document.querySelector(`#${btn.dataset.fecharDialog}`);
+            if (dlg) dlg.close();
+        });
+    });
     carregarLivros();
 });
