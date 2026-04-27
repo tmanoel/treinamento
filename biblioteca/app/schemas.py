@@ -89,3 +89,57 @@ class LivroResponse(BaseModel):
     @field_serializer("created_at", "updated_at")
     def _iso_utc(self, v: datetime) -> str:
         return v.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _validar_data_nao_futura(v: datetime, campo: str) -> datetime:
+    agora = datetime.now(tz=UTC).replace(tzinfo=None)
+    valor = v.replace(tzinfo=None) if v.tzinfo is not None else v
+    if valor > agora:
+        raise ValueError(f"{campo} não pode ser futura")
+    return valor
+
+
+class EmprestimoCreate(BaseModel):
+    emprestado_para: str
+    data_emprestimo: datetime
+
+    @field_validator("emprestado_para", mode="before")
+    @classmethod
+    def _emprestado_para_obrigatorio(cls, v: object) -> str:
+        if not isinstance(v, str) or not v.strip():
+            raise ValueError("emprestado_para é obrigatório")
+        return v.strip()
+
+    @field_validator("data_emprestimo", mode="after")
+    @classmethod
+    def _data_emprestimo_nao_futura(cls, v: datetime) -> datetime:
+        return _validar_data_nao_futura(v, "data_emprestimo")
+
+
+class EmprestimoClose(BaseModel):
+    data_devolucao: datetime
+
+    @field_validator("data_devolucao", mode="after")
+    @classmethod
+    def _data_devolucao_nao_futura(cls, v: datetime) -> datetime:
+        return _validar_data_nao_futura(v, "data_devolucao")
+
+
+class EmprestimoResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    livro_id: int
+    emprestado_para: str
+    data_emprestimo: datetime
+    data_devolucao: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+    @field_serializer("data_emprestimo", "created_at", "updated_at")
+    def _iso_utc(self, v: datetime) -> str:
+        return v.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @field_serializer("data_devolucao")
+    def _iso_utc_opt(self, v: datetime | None) -> str | None:
+        return v.strftime("%Y-%m-%dT%H:%M:%SZ") if v is not None else None
