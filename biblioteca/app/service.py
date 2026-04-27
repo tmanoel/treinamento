@@ -108,3 +108,8 @@ def devolver_livro(db: Session, livro_id: int, dados: EmprestimoClose) -> Empres
 
     emprestimo.data_devolucao = dados.data_devolucao
     return repository.atualizar_emprestimo(db, emprestimo)
+
+
+def listar_emprestimos(db: Session, livro_id: int) -> list[Emprestimo]:
+    buscar_livro(db, livro_id)
+    return repository.listar_emprestimos_do_livro(db, livro_id)

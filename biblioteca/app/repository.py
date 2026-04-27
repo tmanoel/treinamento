@@ -79,3 +79,12 @@ def atualizar_emprestimo(db: Session, emprestimo: Emprestimo) -> Emprestimo:
     db.commit()
     db.refresh(emprestimo)
     return emprestimo
+
+
+def listar_emprestimos_do_livro(db: Session, livro_id: int) -> list[Emprestimo]:
+    return (
+        db.query(Emprestimo)
+        .filter(Emprestimo.livro_id == livro_id)
+        .order_by(Emprestimo.data_emprestimo.desc())
+        .all()
+    )

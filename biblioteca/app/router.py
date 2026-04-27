@@ -110,3 +110,11 @@ def devolver_livro(
     livro_id: int, payload: EmprestimoClose, db: Session = Depends(get_db)
 ):
     return service.devolver_livro(db, livro_id, payload)
+
+
+@router.get(
+    "/livros/{livro_id}/emprestimos",
+    response_model=list[EmprestimoResponse],
+)
+def listar_emprestimos(livro_id: int, db: Session = Depends(get_db)):
+    return service.listar_emprestimos(db, livro_id)
