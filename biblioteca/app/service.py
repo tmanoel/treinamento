@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -23,6 +25,10 @@ def listar_livros(
     editora: str | None = None,
     ano_publicacao: int | None = None,
     lido: bool | None = None,
+    emprestado: bool | None = None,
+    emprestado_para: str | None = None,
+    emprestado_desde: datetime | None = None,
+    emprestado_ate: datetime | None = None,
 ) -> list[Livro]:
     return repository.listar(
         db,
@@ -31,6 +37,10 @@ def listar_livros(
         editora=editora,
         ano_publicacao=ano_publicacao,
         lido=lido,
+        emprestado=emprestado,
+        emprestado_para=emprestado_para,
+        emprestado_desde=emprestado_desde,
+        emprestado_ate=emprestado_ate,
     )
 
 

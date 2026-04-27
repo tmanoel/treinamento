@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -37,7 +39,7 @@ def criar_livro(payload: LivroCreate, db: Session = Depends(get_db)):
     return service.criar_livro(db, payload)
 
 
-def _coerce_lido_query(valor: str | None) -> bool | None:
+def _coerce_bool_query(valor: str | None, campo: str) -> bool | None:
     if valor is None:
         return None
     normalizado = valor.lower()
@@ -47,8 +49,20 @@ def _coerce_lido_query(valor: str | None) -> bool | None:
         return False
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="lido deve ser true ou false",
+        detail=f"{campo} deve ser true ou false",
     )
+
+
+def _coerce_data_query(valor: str | None, campo: str) -> datetime | None:
+    if valor is None:
+        return None
+    try:
+        return datetime.fromisoformat(valor.replace("Z", "+00:00")).replace(tzinfo=None)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{campo} deve ser uma data ISO 8601 válida",
+        ) from exc
 
 
 @router.get("/livros", response_model=list[LivroResponse])
@@ -58,6 +72,10 @@ def listar_livros(
     editora: str | None = None,
     ano_publicacao: int | None = None,
     lido: str | None = None,
+    emprestado: str | None = None,
+    emprestado_para: str | None = None,
+    emprestado_desde: str | None = None,
+    emprestado_ate: str | None = None,
     db: Session = Depends(get_db),
 ):
     return service.listar_livros(
@@ -66,7 +84,11 @@ def listar_livros(
         autor=autor,
         editora=editora,
         ano_publicacao=ano_publicacao,
-        lido=_coerce_lido_query(lido),
+        lido=_coerce_bool_query(lido, "lido"),
+        emprestado=_coerce_bool_query(emprestado, "emprestado"),
+        emprestado_para=emprestado_para,
+        emprestado_desde=_coerce_data_query(emprestado_desde, "emprestado_desde"),
+        emprestado_ate=_coerce_data_query(emprestado_ate, "emprestado_ate"),
     )
 
 

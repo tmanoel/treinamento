@@ -1,7 +1,16 @@
-from sqlalchemy import func
+from datetime import datetime
+
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models import Emprestimo, Livro
+
+
+def _anexar_emprestimo(livro: Livro, emp: Emprestimo | None) -> Livro:
+    livro.emprestado = emp is not None
+    livro.emprestado_para = emp.emprestado_para if emp else None
+    livro.data_emprestimo = emp.data_emprestimo if emp else None
+    return livro
 
 
 def existe_por_titulo_autor(
@@ -20,7 +29,7 @@ def criar(db: Session, livro: Livro) -> Livro:
     db.add(livro)
     db.commit()
     db.refresh(livro)
-    return livro
+    return _anexar_emprestimo(livro, None)
 
 
 def listar(
@@ -30,8 +39,17 @@ def listar(
     editora: str | None = None,
     ano_publicacao: int | None = None,
     lido: bool | None = None,
+    emprestado: bool | None = None,
+    emprestado_para: str | None = None,
+    emprestado_desde: datetime | None = None,
+    emprestado_ate: datetime | None = None,
 ) -> list[Livro]:
-    query = db.query(Livro)
+    join_cond = and_(
+        Emprestimo.livro_id == Livro.id,
+        Emprestimo.data_devolucao.is_(None),
+    )
+    query = db.query(Livro, Emprestimo).outerjoin(Emprestimo, join_cond)
+
     if titulo is not None:
         query = query.filter(Livro.titulo.ilike(f"%{titulo}%"))
     if autor is not None:
@@ -42,17 +60,32 @@ def listar(
         query = query.filter(Livro.ano_publicacao == ano_publicacao)
     if lido is not None:
         query = query.filter(Livro.lido == lido)
-    return query.order_by(Livro.id).all()
+    if emprestado is True:
+        query = query.filter(Emprestimo.id.isnot(None))
+    elif emprestado is False:
+        query = query.filter(Emprestimo.id.is_(None))
+    if emprestado_para is not None:
+        query = query.filter(Emprestimo.emprestado_para.ilike(f"%{emprestado_para}%"))
+    if emprestado_desde is not None:
+        query = query.filter(Emprestimo.data_emprestimo >= emprestado_desde)
+    if emprestado_ate is not None:
+        query = query.filter(Emprestimo.data_emprestimo <= emprestado_ate)
+
+    resultado = query.order_by(Livro.id).all()
+    return [_anexar_emprestimo(livro, emp) for livro, emp in resultado]
 
 
 def buscar_por_id(db: Session, livro_id: int) -> Livro | None:
-    return db.query(Livro).filter(Livro.id == livro_id).first()
+    livro = db.query(Livro).filter(Livro.id == livro_id).first()
+    if livro is None:
+        return None
+    return _anexar_emprestimo(livro, emprestimo_ativo(db, livro_id))
 
 
 def atualizar(db: Session, livro: Livro) -> Livro:
     db.commit()
     db.refresh(livro)
-    return livro
+    return _anexar_emprestimo(livro, emprestimo_ativo(db, livro.id))
 
 
 def remover(db: Session, livro: Livro) -> None:

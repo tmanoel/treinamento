@@ -83,12 +83,19 @@ class LivroResponse(BaseModel):
     editora: str
     ano_publicacao: int
     lido: bool
+    emprestado: bool
+    emprestado_para: str | None
+    data_emprestimo: datetime | None
     created_at: datetime
     updated_at: datetime
 
     @field_serializer("created_at", "updated_at")
     def _iso_utc(self, v: datetime) -> str:
         return v.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @field_serializer("data_emprestimo")
+    def _iso_utc_opt(self, v: datetime | None) -> str | None:
+        return v.strftime("%Y-%m-%dT%H:%M:%SZ") if v is not None else None
 
 
 def _validar_data_nao_futura(v: datetime, campo: str) -> datetime:
