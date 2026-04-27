@@ -44,6 +44,12 @@ Estas regras aparecem espalhadas pelos docs e valem para qualquer endpoint novo:
 - **Coerção de `lido`**: aceita string `"true"`/`"false"` (case-insensitive) **somente** em query params de `GET /api/livros`. No body de `POST`/`PATCH` deve ser booleano JSON estrito.
 - **Duplicata** (RN01): comparação case-insensitive de `titulo`+`autor`. No `PATCH`, ignorar o próprio `id` na verificação — reenviar os mesmos `titulo`/`autor` do livro não gera 409.
 - **Ordem de validação no PATCH** (T07): (1) body vazio → `"Informe ao menos um campo para atualizar"`; (2) `lido` não booleano; (3) `ano_publicacao` fora do intervalo; (4) campo string vazio/só espaços → `"<campo> não pode ser vazio"`.
+- **Empréstimos via endpoints dedicados** (D10): `POST /api/livros/{id}/emprestimos` (emprestar) e `DELETE /api/livros/{id}/emprestimos` (devolver, encerra o ativo). Não use `PATCH /api/livros/{id}` para mexer em empréstimo — o PATCH continua restrito a `titulo`, `autor`, `editora`, `ano_publicacao`, `lido`.
+- **Empréstimo ativo único** (RN08): só pode existir um `Emprestimo` com `data_devolucao IS NULL` por livro. Tentativa de criar outro → `409 "Livro já está emprestado"`.
+- **Devolução exige ativo** (RN10): `DELETE /emprestimos` em livro sem ativo → `400 "Livro não está emprestado"`.
+- **Estado `emprestado` é derivado, nunca persistido** (RN07/D09): não criar coluna `emprestado` em `livros`. `LivroResponse.emprestado` é calculado em runtime via subquery sobre `emprestimos`. `emprestado_para` e `data_emprestimo` na resposta refletem o empréstimo ativo (ou `null`).
+- **Cliente informa datas de empréstimo** (D11): `data_emprestimo` (POST) e `data_devolucao` (DELETE) vêm do body. Servidor valida RN09 (não futuras, `data_emprestimo >= livro.created_at`, `data_devolucao >= data_emprestimo`).
+- **Cascata na remoção do livro** (RN11/D12): `DELETE /api/livros/{id}` apaga todos os empréstimos do livro via `ON DELETE CASCADE` (FK em `emprestimos.livro_id`). Garantir `PRAGMA foreign_keys = ON` no engine SQLite.
 
 ## Stack e arquitetura aprovadas
 

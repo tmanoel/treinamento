@@ -182,6 +182,132 @@ Documentar como clonar, instalar, rodar e testar o projeto.
 
 ---
 
+## Fase 4 — Empréstimos
+
+### T14 — Modelo `Emprestimo` + migração
+Criar a tabela `emprestimos` com FK para `livros`, índice e cascade delete.
+
+- **Ref:** design §2 (Entidade `Emprestimo`), RN07–RN11, D08, D12
+- **Depende de:** T02
+- **Pronto quando:**
+  - SQLAlchemy model `Emprestimo` definido com campos: `id`, `livro_id` (FK → `livros.id`, `ON DELETE CASCADE`), `emprestado_para`, `data_emprestimo`, `data_devolucao` (nullable), `created_at`, `updated_at`
+  - Índice em `livro_id` para acelerar lookups de empréstimo ativo
+  - Tabela criada automaticamente ao subir a aplicação (junto com `livros`)
+  - `created_at`/`updated_at` seguem o mesmo padrão de `Livro` (preenchimento e atualização automáticos, ISO 8601 UTC)
+  - PRAGMA `foreign_keys = ON` configurado no SQLAlchemy engine para que SQLite respeite o `ON DELETE CASCADE`
+
+---
+
+### T15 — Schemas Pydantic de empréstimo
+Criar schemas `EmprestimoCreate`, `EmprestimoClose`, `EmprestimoResponse` em `schemas.py`.
+
+- **Ref:** RN05, RN09, RNF02, RNF04
+- **Depende de:** T01
+- **Pronto quando:**
+  - `EmprestimoCreate`: `emprestado_para` str não vazia (`.strip()`, mensagem `"emprestado_para é obrigatório"`); `data_emprestimo` datetime; validação de futuro (`"data_emprestimo não pode ser futura"`) — a validação contra `created_at` do livro fica no Service (T16) por exigir o livro
+  - `EmprestimoClose`: `data_devolucao` datetime; validação de futuro (`"data_devolucao não pode ser futura"`) — comparação contra `data_emprestimo` fica no Service (T17)
+  - `EmprestimoResponse`: todos os campos do model (`id`, `livro_id`, `emprestado_para`, `data_emprestimo`, `data_devolucao`, `created_at`, `updated_at`); datas em ISO 8601 UTC (`"YYYY-MM-DDTHH:MM:SSZ"`)
+
+---
+
+### T16 — Endpoint `POST /api/livros/{id}/emprestimos`
+Implementar criação de empréstimo, com checagem de empréstimo ativo (RN08) e validação de data contra `created_at` do livro (RN09).
+
+- **Ref:** RF09, RN05, RN08, RN09, US08
+- **Depende de:** T14, T15
+- **Pronto quando:**
+  - Retorna `201` com o `EmprestimoResponse`
+  - Retorna `400` se `emprestado_para` ausente/vazio, `data_emprestimo` ausente, futura, ou anterior a `livros.created_at` (mensagem `"data_emprestimo não pode ser anterior à criação do livro"`)
+  - Retorna `404` se livro não existe (`"Livro não encontrado"`)
+  - Retorna `409` se já existe `Emprestimo` ativo para o livro (`"Livro já está emprestado"`)
+
+---
+
+### T17 — Endpoint `DELETE /api/livros/{id}/emprestimos`
+Implementar fechamento do empréstimo ativo.
+
+- **Ref:** RF10, RN09, RN10, US09
+- **Depende de:** T14, T15
+- **Pronto quando:**
+  - Retorna `200` com o `EmprestimoResponse` atualizado (com `data_devolucao` preenchida)
+  - Retorna `400` se `data_devolucao` ausente, futura, anterior à `data_emprestimo` do empréstimo ativo, ou se livro não tem empréstimo ativo (`"Livro não está emprestado"`)
+  - Retorna `404` se livro não existe (`"Livro não encontrado"`)
+  - `updated_at` do empréstimo é atualizado
+
+---
+
+### T18 — Endpoint `GET /api/livros/{id}/emprestimos`
+Implementar listagem do histórico de empréstimos do livro.
+
+- **Ref:** RF11, US10
+- **Depende de:** T14, T15
+- **Pronto quando:**
+  - Retorna `200` com array de `EmprestimoResponse` ordenado por `data_emprestimo` desc (mais recente primeiro)
+  - Retorna lista vazia (`[]`) quando o livro existe mas nunca foi emprestado
+  - Retorna `404` se livro não existe (`"Livro não encontrado"`)
+
+---
+
+### T19 — Filtros novos em `GET /api/livros` + ajuste do `LivroResponse`
+Adicionar query params `emprestado`, `emprestado_para`, `emprestado_desde`, `emprestado_ate` em `GET /api/livros`. Ajustar `LivroResponse` para incluir os campos derivados (`emprestado`, `emprestado_para`, `data_emprestimo`).
+
+- **Ref:** RF07 (atualizado), RF12, RN07, US06 (atualizada), D09
+- **Depende de:** T14, T09
+- **Pronto quando:**
+  - `LivroResponse` inclui `emprestado` (bool, derivado), `emprestado_para` (str|null, do empréstimo ativo) e `data_emprestimo` (datetime|null, do empréstimo ativo) em **todos** os endpoints que retornam livro (`POST`, `GET`, `GET /{id}`, `PATCH`)
+  - `?emprestado=true|false` filtra livros pela existência (ou não) de empréstimo ativo
+  - `?emprestado_para=<termo>` faz busca parcial case-insensitive sobre o `emprestado_para` do empréstimo ativo (livros sem ativo são excluídos do resultado)
+  - `?emprestado_desde=<data>` e `?emprestado_ate=<data>` filtram pela `data_emprestimo` do empréstimo ativo (livros sem ativo são excluídos)
+  - Filtros podem ser combinados entre si e com os existentes
+  - Implementação no Repository via `LEFT JOIN` ou subquery em `emprestimos` filtrando `data_devolucao IS NULL`
+
+---
+
+### T20 — Frontend: UI de empréstimo
+Adicionar interface para emprestar/devolver livros, visualizar histórico e filtrar por empréstimo.
+
+- **Ref:** RF09, RF10, RF11, RF12, US08, US09, US10
+- **Depende de:** T16, T17, T18, T19
+- **Pronto quando:**
+  - Tabela principal mostra coluna(s) com status do empréstimo (`emprestado`, `emprestado_para`, `data_emprestimo`)
+  - Botão "Emprestar" (ou similar) em livros não emprestados abre formulário/modal pedindo `emprestado_para` e `data_emprestimo`; submete `POST /api/livros/{id}/emprestimos`
+  - Botão "Devolver" em livros emprestados abre formulário/modal pedindo `data_devolucao`; submete `DELETE /api/livros/{id}/emprestimos`
+  - Botão/link "Ver histórico" mostra a lista de empréstimos via `GET /api/livros/{id}/emprestimos` (modal, painel expansível, ou seção dedicada — escolha do dev)
+  - Formulário de filtros inclui campos para `emprestado`, `emprestado_para`, `emprestado_desde`, `emprestado_ate`
+  - Mensagens de erro da API (400/404/409) são exibidas em português
+
+---
+
+### T21 — Testes automatizados de empréstimo
+Cobrir critérios de US08–US10 e os filtros novos da US06 atualizada.
+
+- **Ref:** US06 (atualizada), US08, US09, US10, RN07–RN11
+- **Depende de:** T16, T17, T18, T19
+- **Pronto quando:**
+  - Testes para cada critério de US08, US09, US10 (sucesso e cada erro 400/404/409)
+  - Teste de RN08 (não permite duplo empréstimo ativo)
+  - Teste de RN10 (devolução em livro sem ativo retorna 400)
+  - Teste de RN09 (datas inválidas em ambas as direções)
+  - Teste de RN07 (`LivroResponse` reflete corretamente `emprestado`, `emprestado_para`, `data_emprestimo` antes/depois de empréstimo e devolução)
+  - Teste de RN11 (DELETE de livro com empréstimos remove os empréstimos em cascata)
+  - Testes dos novos filtros em `GET /api/livros` (`emprestado`, `emprestado_para`, `emprestado_desde`, `emprestado_ate`, combinações)
+  - `pytest` roda todos os testes com sucesso, incluindo os pré-existentes
+
+---
+
+### T22 — Atualizar README com a feature de empréstimo
+Documentar os 3 novos endpoints, os novos filtros e a UI de empréstimo no README.
+
+- **Ref:** —
+- **Depende de:** T20, T21
+- **Pronto quando:**
+  - Exemplos `curl` para `POST /api/livros/{id}/emprestimos`, `DELETE /api/livros/{id}/emprestimos`, `GET /api/livros/{id}/emprestimos`
+  - Exemplos `curl` dos novos filtros em `GET /api/livros`
+  - Descrição da UI de empréstimo (botões, fluxo, histórico)
+  - Menciona regra de empréstimo ativo único (RN08) e cascata na remoção (RN11)
+
+---
+
 ## Resumo de dependências
 
 ```
@@ -194,6 +320,13 @@ T01 ──► T02 ──► T04, T05, T06, T07, T08
     └── T11 ──► T12 ──────────────►│
                                    ▼
                                   T10 ──► T13
+
+T02 ──► T14 ──► T16, T17, T18 ──► T20 ──► T22
+    ├── T15 ─┘                       │     │
+    │                                │     │
+    └── T09 ──► T19 ─────────────────┤     │
+                                     ▼     │
+                                    T21 ───┘
 ```
 
 ## Ordem sugerida de execução
@@ -204,4 +337,10 @@ T01 ──► T02 ──► T04, T05, T06, T07, T08
 4. **T09** (depende de T05)
 5. **T12** (frontend — depende dos endpoints)
 6. **T10** (integra tudo)
-7. **T13** (documentação final)
+7. **T13** (documentação final da fase 1–3)
+8. **T14** + **T15** (modelo e schemas de empréstimo, em paralelo)
+9. **T16–T18** (em paralelo — um dev por endpoint de empréstimo)
+10. **T19** (filtros novos + ajuste do `LivroResponse`)
+11. **T20** (frontend de empréstimo — depende dos endpoints)
+12. **T21** (testes integrados)
+13. **T22** (atualização final do README)

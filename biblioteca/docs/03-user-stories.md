@@ -75,13 +75,16 @@
 ## US06 — Buscar e filtrar livros
 
 **Como** usuário da biblioteca,  
-**quero** buscar livros por título, autor, editora, ano de publicação ou status de leitura,  
+**quero** buscar livros por título, autor, editora, ano de publicação, status de leitura ou status de empréstimo,  
 **para que** eu encontre rapidamente o livro que procuro.
 
 **Critérios de aceitação:**
 - Busca por `titulo`, `autor` ou `editora` é parcial e case-insensitive
 - Filtro por `ano_publicacao` é exato (inteiro)
 - Filtro por `lido` aceita `true` ou `false`
+- Filtro por `emprestado` aceita `true` ou `false` — atua sobre o empréstimo ativo (RN07)
+- Busca por `emprestado_para` é parcial e case-insensitive — atua sobre o empréstimo ativo
+- Filtros `emprestado_desde` e `emprestado_ate` (datas ISO 8601) delimitam o intervalo de `data_emprestimo` do empréstimo ativo
 - Filtros podem ser combinados
 - Retorna `200` com a lista filtrada (pode ser vazia)
 
@@ -96,6 +99,50 @@
 **Critérios de aceitação:**
 - Retorna `200` com os dados do livro
 - Retorna `404` com mensagem descritiva se o livro não existir (ex: `"Livro não encontrado"`)
+
+---
+
+## US08 — Emprestar livro
+
+**Como** usuário da biblioteca,  
+**quero** marcar um livro existente como emprestado, registrando para quem emprestei e quando,  
+**para que** eu acompanhe quais livros não estão comigo no momento.
+
+**Critérios de aceitação:**
+- Retorna `201` com os dados do empréstimo criado (`id`, `livro_id`, `emprestado_para`, `data_emprestimo`, `data_devolucao: null`, `created_at`, `updated_at`)
+- Retorna `400` com mensagem descritiva se `emprestado_para` estiver ausente, vazio ou contiver apenas espaços (ex.: `"emprestado_para é obrigatório"`)
+- Retorna `400` com mensagem descritiva se `data_emprestimo` for inválida (ex.: `"data_emprestimo não pode ser futura"`, `"data_emprestimo não pode ser anterior à criação do livro"`)
+- Retorna `404` com mensagem descritiva se o livro não existir (ex.: `"Livro não encontrado"`)
+- Retorna `409` com mensagem descritiva se o livro já possuir um empréstimo ativo (ex.: `"Livro já está emprestado"`)
+- Após sucesso, `GET /api/livros/{id}` passa a retornar `emprestado: true` com `emprestado_para` e `data_emprestimo` preenchidos (RN07)
+
+---
+
+## US09 — Devolver livro
+
+**Como** usuário da biblioteca,  
+**quero** registrar a devolução de um livro emprestado, informando a data,  
+**para que** o sistema reflita que o livro voltou para minha biblioteca e mantenha o histórico.
+
+**Critérios de aceitação:**
+- Retorna `200` com os dados do empréstimo encerrado (com `data_devolucao` preenchida)
+- Retorna `400` com mensagem descritiva se `data_devolucao` for inválida (ex.: `"data_devolucao não pode ser anterior à data_emprestimo"`, `"data_devolucao não pode ser futura"`)
+- Retorna `400` com mensagem descritiva se o livro não tiver empréstimo ativo (ex.: `"Livro não está emprestado"`)
+- Retorna `404` com mensagem descritiva se o livro não existir (ex.: `"Livro não encontrado"`)
+- Após sucesso, `GET /api/livros/{id}` passa a retornar `emprestado: false` com `emprestado_para` e `data_emprestimo` como `null` (RN07)
+
+---
+
+## US10 — Consultar histórico de empréstimos do livro
+
+**Como** usuário da biblioteca,  
+**quero** consultar o histórico completo de empréstimos de um livro,  
+**para que** eu saiba para quem e quando emprestei o livro ao longo do tempo.
+
+**Critérios de aceitação:**
+- Retorna `200` com a lista de empréstimos do livro (ativos e encerrados), ordenada por `data_emprestimo` desc
+- Retorna lista vazia quando o livro nunca foi emprestado
+- Retorna `404` com mensagem descritiva se o livro não existir (ex.: `"Livro não encontrado"`)
 
 ---
 

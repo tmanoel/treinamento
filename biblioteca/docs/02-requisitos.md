@@ -31,9 +31,25 @@ O sistema deve permitir buscar livros por:
 - `editora` (busca parcial, case-insensitive)
 - `ano_publicacao` (filtro exato)
 - `lido` (filtro exato: `true | false`)
+- `emprestado` (filtro exato: `true | false`) — atua sobre o empréstimo ativo (ver RN07)
+- `emprestado_para` (busca parcial, case-insensitive) — atua sobre o empréstimo ativo
+- `emprestado_desde` (data ISO 8601, filtro `>=`) — sobre `data_emprestimo` do empréstimo ativo
+- `emprestado_ate` (data ISO 8601, filtro `<=`) — sobre `data_emprestimo` do empréstimo ativo
 
 ### RF08 — Consultar livro por ID
 O sistema deve retornar os dados de um livro específico pelo seu ID.
+
+### RF09 — Emprestar livro
+O sistema deve permitir registrar o empréstimo de um livro existente, informando `emprestado_para` (string não vazia) e `data_emprestimo`. Cria um novo registro de empréstimo ativo (sem `data_devolucao`).
+
+### RF10 — Devolver livro
+O sistema deve permitir registrar a devolução do livro emprestado, informando `data_devolucao`. Encerra o empréstimo ativo correspondente.
+
+### RF11 — Consultar histórico de empréstimos do livro
+O sistema deve retornar o histórico completo de empréstimos (ativos e encerrados) de um livro específico pelo seu ID.
+
+### RF12 — Filtrar livros por empréstimo
+O sistema deve permitir filtrar a lista de livros por status de empréstimo, pessoa para quem foi emprestado e período de empréstimo (ver query params em RF07).
 
 ---
 
@@ -78,3 +94,19 @@ Campos obrigatórios não podem ser enviados como string vazia ou contendo apena
 
 ### RN06 — Campos gerados pelo servidor
 Todo livro possui `id`, `created_at` e `updated_at` gerados automaticamente pelo sistema — não são informados pelo usuário. `created_at` é preenchido na criação e nunca alterado. `updated_at` é preenchido na criação e atualizado a cada modificação do registro.
+
+### RN07 — Estado "emprestado" é derivado
+O campo `emprestado` exibido no `LivroResponse` é calculado em runtime: `true` se existe um empréstimo ativo (registro de `Emprestimo` com `data_devolucao IS NULL`) para o livro, `false` caso contrário. Não é coluna na tabela `livros`. Quando `emprestado=true`, os campos `emprestado_para` e `data_emprestimo` na resposta refletem o empréstimo ativo; quando `false`, são `null`.
+
+### RN08 — Empréstimo ativo único
+Cada livro pode ter, no máximo, **um** empréstimo ativo (sem `data_devolucao`) por vez. Tentativa de criar novo empréstimo enquanto já existe um ativo deve ser rejeitada com `409 Conflict` e mensagem `"Livro já está emprestado"`.
+
+### RN09 — Validação de datas de empréstimo
+- `data_emprestimo` deve ser `<=` `now(UTC)` (não pode ser futura) e `>=` `created_at` do livro (não pode ser anterior à criação do livro). Mensagens: `"data_emprestimo não pode ser futura"`, `"data_emprestimo não pode ser anterior à criação do livro"`.
+- `data_devolucao` deve ser `>=` `data_emprestimo` do empréstimo ativo e `<=` `now(UTC)`. Mensagens: `"data_devolucao não pode ser anterior à data_emprestimo"`, `"data_devolucao não pode ser futura"`.
+
+### RN10 — Devolução exige empréstimo ativo
+Tentativa de devolução em livro que não possui empréstimo ativo deve ser rejeitada com `400 Bad Request` e mensagem `"Livro não está emprestado"`.
+
+### RN11 — Cascata na remoção do livro
+Ao remover um livro (`DELETE /api/livros/{id}`), todos os empréstimos relacionados (ativos e históricos) são removidos em cascata (FK `ON DELETE CASCADE`). Não há órfãos.

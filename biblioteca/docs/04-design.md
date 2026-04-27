@@ -42,6 +42,24 @@
 
 > **Formato de datas:** `created_at` e `updated_at` são serializados como string ISO 8601 em UTC (ex.: `"2026-04-17T10:00:00Z"`). Persistência em UTC garante comparações consistentes e evita ambiguidades de fuso.
 
+### Entidade: `Emprestimo`
+
+| Campo | Tipo | Restrições |
+|---|---|---|
+| `id` | inteiro | chave primária, autoincremento |
+| `livro_id` | inteiro | FK → `livros.id`, **não nulo**, índice, `ON DELETE CASCADE` (RN11) |
+| `emprestado_para` | string | obrigatório, não vazio (RN05 aplicável) |
+| `data_emprestimo` | datetime (ISO 8601 UTC) | obrigatório, validado por RN09 |
+| `data_devolucao` | datetime (ISO 8601 UTC) \| null | `null` enquanto o empréstimo está ativo; preenchido na devolução, validado por RN09 |
+| `created_at` | datetime (ISO 8601 UTC) | preenchido automaticamente na criação |
+| `updated_at` | datetime (ISO 8601 UTC) | atualizado automaticamente a cada modificação |
+
+> **Estado "emprestado" do livro é derivado, não armazenado** (RN07/D09): `livros.emprestado` não existe como coluna. Calcula-se em runtime via subquery: existe `Emprestimo` com `livro_id = ?` AND `data_devolucao IS NULL`.
+
+> **Apenas um empréstimo ativo por livro** (RN08/D08): aplicado por verificação no Service no `POST /api/livros/{id}/emprestimos`. Não há índice único parcial (decisão por simplicidade; SQLite suporta, mas a verificação no Service basta para o escopo atual).
+
+> **Resposta de `LivroResponse`** inclui os campos derivados: `emprestado` (bool), `emprestado_para` (string|null) e `data_emprestimo` (datetime|null). Quando `emprestado=false`, os outros dois são `null`.
+
 ---
 
 ## 3. Arquitetura da Aplicação
@@ -106,6 +124,11 @@ Frontend **estático simples** servido pelo próprio FastAPI via `StaticFiles`. 
 | D05 | Rota `GET /` — health check vs. frontend | ✅ `GET /` serve `index.html` (ver D07); health check em `GET /api/health` |
 | D06 | RF04 (marcar lido) e RF05 (editar) como endpoints separados vs. único PATCH | ✅ Único `PATCH /livros/{id}` cobre ambos; `lido` é campo como qualquer outro |
 | D07 | Roteamento de API vs. frontend estático na raiz | ✅ API sob prefixo `/api` (ex.: `/api/livros`, `/api/health`); frontend estático montado em `/` via `StaticFiles(directory="app/static", html=True)`, que serve `index.html` automaticamente para `GET /`. Separa namespaces, mantém a documentação OpenAPI limpa e evita colisões com rotas futuras do frontend. |
+| D08 | Empréstimo como entidade separada vs. campos no livro | ✅ Tabela `emprestimos` separada (RF09–RF11). Preserva histórico completo (decisão do usuário: "Histórico completo (tabela separada)"). Evita denormalização que causaria inconsistência entre `emprestado` e os dados do empréstimo atual. |
+| D09 | Estado `emprestado` armazenado vs. derivado | ✅ Derivado (RN07). `LivroResponse.emprestado` é calculado em runtime via subquery `EXISTS (SELECT 1 FROM emprestimos WHERE livro_id = ? AND data_devolucao IS NULL)`. Single source of truth — impossível ficar fora de sincronia com a tabela de empréstimos. |
+| D10 | Endpoints dedicados vs. campos no PATCH para empréstimo | ✅ Endpoints dedicados: `POST /api/livros/{id}/emprestimos` (emprestar) e `DELETE /api/livros/{id}/emprestimos` (devolver o empréstimo ativo). Intenção explícita; validações de RN08/RN09/RN10 isoladas; o `PATCH /api/livros/{id}` continua restrito a `titulo`, `autor`, `editora`, `ano_publicacao`, `lido`. |
+| D11 | Quem informa as datas de empréstimo/devolução | ✅ Cliente informa `data_emprestimo` (no `POST`) e `data_devolucao` (no `DELETE`). Permite registro retroativo (ex.: "emprestei há uma semana e esqueci de cadastrar"). Servidor valida intervalos via RN09. |
+| D12 | Tratamento de remoção de livro com empréstimos | ✅ `ON DELETE CASCADE` em `emprestimos.livro_id`. Remover um livro apaga todos os seus empréstimos (RN11). Sem órfãos, sem necessidade de bloqueio adicional na remoção. |
 
 ---
 
