@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app import service
 from app.models import SessionLocal
 from app.schemas import (
+    EmprestimoClose,
     EmprestimoCreate,
     EmprestimoResponse,
     LivroCreate,
@@ -99,3 +100,13 @@ def emprestar_livro(
     livro_id: int, payload: EmprestimoCreate, db: Session = Depends(get_db)
 ):
     return service.emprestar_livro(db, livro_id, payload)
+
+
+@router.delete(
+    "/livros/{livro_id}/emprestimos",
+    response_model=EmprestimoResponse,
+)
+def devolver_livro(
+    livro_id: int, payload: EmprestimoClose, db: Session = Depends(get_db)
+):
+    return service.devolver_livro(db, livro_id, payload)

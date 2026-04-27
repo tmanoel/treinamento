@@ -73,3 +73,9 @@ def criar_emprestimo(db: Session, emprestimo: Emprestimo) -> Emprestimo:
     db.commit()
     db.refresh(emprestimo)
     return emprestimo
+
+
+def atualizar_emprestimo(db: Session, emprestimo: Emprestimo) -> Emprestimo:
+    db.commit()
+    db.refresh(emprestimo)
+    return emprestimo

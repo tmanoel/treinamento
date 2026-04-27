@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import repository
 from app.models import Emprestimo, Livro
-from app.schemas import EmprestimoCreate, LivroCreate
+from app.schemas import EmprestimoClose, EmprestimoCreate, LivroCreate
 
 
 def criar_livro(db: Session, dados: LivroCreate) -> Livro:
@@ -88,3 +88,23 @@ def emprestar_livro(db: Session, livro_id: int, dados: EmprestimoCreate) -> Empr
         data_emprestimo=dados.data_emprestimo,
     )
     return repository.criar_emprestimo(db, emprestimo)
+
+
+def devolver_livro(db: Session, livro_id: int, dados: EmprestimoClose) -> Emprestimo:
+    buscar_livro(db, livro_id)
+
+    emprestimo = repository.emprestimo_ativo(db, livro_id)
+    if emprestimo is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Livro não está emprestado",
+        )
+
+    if dados.data_devolucao < emprestimo.data_emprestimo:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="data_devolucao não pode ser anterior à data_emprestimo",
+        )
+
+    emprestimo.data_devolucao = dados.data_devolucao
+    return repository.atualizar_emprestimo(db, emprestimo)
