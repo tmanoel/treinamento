@@ -3,7 +3,13 @@ from sqlalchemy.orm import Session
 
 from app import service
 from app.models import SessionLocal
-from app.schemas import LivroCreate, LivroResponse, LivroUpdate
+from app.schemas import (
+    EmprestimoCreate,
+    EmprestimoResponse,
+    LivroCreate,
+    LivroResponse,
+    LivroUpdate,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -82,3 +88,14 @@ def atualizar_livro(livro_id: int, payload: LivroUpdate, db: Session = Depends(g
 @router.delete("/livros/{livro_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remover_livro(livro_id: int, db: Session = Depends(get_db)) -> None:
     service.remover_livro(db, livro_id)
+
+
+@router.post(
+    "/livros/{livro_id}/emprestimos",
+    response_model=EmprestimoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def emprestar_livro(
+    livro_id: int, payload: EmprestimoCreate, db: Session = Depends(get_db)
+):
+    return service.emprestar_livro(db, livro_id, payload)

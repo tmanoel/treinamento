@@ -2,8 +2,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import repository
-from app.models import Livro
-from app.schemas import LivroCreate
+from app.models import Emprestimo, Livro
+from app.schemas import EmprestimoCreate, LivroCreate
 
 
 def criar_livro(db: Session, dados: LivroCreate) -> Livro:
@@ -65,3 +65,26 @@ def atualizar_livro(db: Session, livro_id: int, campos: dict) -> Livro:
 def remover_livro(db: Session, livro_id: int) -> None:
     livro = buscar_livro(db, livro_id)
     repository.remover(db, livro)
+
+
+def emprestar_livro(db: Session, livro_id: int, dados: EmprestimoCreate) -> Emprestimo:
+    livro = buscar_livro(db, livro_id)
+
+    if dados.data_emprestimo < livro.created_at.replace(microsecond=0):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="data_emprestimo não pode ser anterior à criação do livro",
+        )
+
+    if repository.emprestimo_ativo(db, livro_id) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Livro já está emprestado",
+        )
+
+    emprestimo = Emprestimo(
+        livro_id=livro_id,
+        emprestado_para=dados.emprestado_para,
+        data_emprestimo=dados.data_emprestimo,
+    )
+    return repository.criar_emprestimo(db, emprestimo)

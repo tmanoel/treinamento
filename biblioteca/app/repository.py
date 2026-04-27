@@ -1,7 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import Livro
+from app.models import Emprestimo, Livro
 
 
 def existe_por_titulo_autor(
@@ -58,3 +58,18 @@ def atualizar(db: Session, livro: Livro) -> Livro:
 def remover(db: Session, livro: Livro) -> None:
     db.delete(livro)
     db.commit()
+
+
+def emprestimo_ativo(db: Session, livro_id: int) -> Emprestimo | None:
+    return (
+        db.query(Emprestimo)
+        .filter(Emprestimo.livro_id == livro_id, Emprestimo.data_devolucao.is_(None))
+        .first()
+    )
+
+
+def criar_emprestimo(db: Session, emprestimo: Emprestimo) -> Emprestimo:
+    db.add(emprestimo)
+    db.commit()
+    db.refresh(emprestimo)
+    return emprestimo
